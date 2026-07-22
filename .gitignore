@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+dist/
+
+# Env / secrets
+.env
+
+# Playwright output — screenshots, videos, traces, HTML report
+test-results/
+test-results-*/
+playwright-report/
+playwright/.cache/
+blob-report/
+
+# PM2 logs
+.pm2/
+
+# Runtime-generated files under test-data/ — everything here is produced by a
+# run, not source. Only the explicit allowlist below is tracked.
+test-data/*
+!test-data/addresses_my.json
+!test-data/users_pre2.json
+!test-data/image (19).png
+
+# Downloaded confirmation slips (if ever saved outside test-data/)
+Slip_Pengesahan_*.pdf

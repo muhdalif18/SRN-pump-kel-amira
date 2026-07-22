@@ -1,0 +1,50 @@
+{
+  "name": "srn-pump-kel-amira",
+  "version": "1.0.0",
+  "description": "SRN pump automation — AMIRA and KEL spec families",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+
+    "srn-pump-amira-normal:one": "playwright test tests/SRN-PUMP-AMIRA-NORMAL.spec.ts",
+    "srn-pump-amira-normal:forever": "pm2 start ecosystem.config.cjs --only srn-pump-amira-normal-forever",
+    "srn-pump-amira-normal:logs": "pm2 logs srn-pump-amira-normal-forever",
+    "srn-pump-amira-normal:stop": "pm2 delete srn-pump-amira-normal-forever",
+
+    "srn-pump-amira-penalty:one": "playwright test tests/SRN-PUMP-AMIRA-PENALTY.spec.ts",
+    "srn-pump-amira-penalty:forever": "pm2 start ecosystem.config.cjs --only srn-pump-amira-penalty-forever",
+    "srn-pump-amira-penalty:logs": "pm2 logs srn-pump-amira-penalty-forever",
+    "srn-pump-amira-penalty:stop": "pm2 delete srn-pump-amira-penalty-forever",
+
+    "srn-pump-kel-normal:one": "playwright test tests/SRN-PUMP-KEL-NORMAL.spec.ts",
+    "srn-pump-kel-normal:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-normal-forever",
+    "srn-pump-kel-normal:logs": "pm2 logs srn-pump-kel-normal-forever",
+    "srn-pump-kel-normal:stop": "pm2 delete srn-pump-kel-normal-forever",
+
+    "srn-pump-kel-penalty:one": "playwright test tests/SRN-PUMP-KEL-PENALTY.spec.ts",
+    "srn-pump-kel-penalty:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-penalty-forever",
+    "srn-pump-kel-penalty:logs": "pm2 logs srn-pump-kel-penalty-forever",
+    "srn-pump-kel-penalty:stop": "pm2 delete srn-pump-kel-penalty-forever",
+
+    "bots:all": "pm2 start ecosystem.config.cjs",
+    "bots:stop-all": "pm2 delete ecosystem.config.cjs",
+    "bots:status": "pm2 status"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.3.5",
+    "dotenv": "^17.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "pm2": "^7.0.1"
+  }
+}
