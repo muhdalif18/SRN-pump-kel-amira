@@ -9,6 +9,7 @@ dist/
 test-results/
 test-results-*/
 playwright-report/
+playwright-report-*/
 playwright/.cache/
 blob-report/
 

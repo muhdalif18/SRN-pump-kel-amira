@@ -2,9 +2,9 @@ import { test, chromium, firefox, webkit } from "@playwright/test";
 import * as fs from "fs";
 
 // Override to use Chrome browser
+// browserName/channel come from the selected --project (chromium -> Chrome,
+// msedge -> Edge); only force headless here.
 test.use({
-  browserName: "chromium",
-  channel: "chrome",
   headless: true,
 });
 
@@ -16,10 +16,14 @@ const PENALTY_DATE_JAN = "01/01/2026";
 const PENALTY_DATE_MAY = "02/05/2026";
 
 // Fixed penalty amount to insert every iteration
-const FIXED_PENALTY_AMOUNT = 427183954;
+const FIXED_PENALTY_AMOUNT = 843000000.0;
 
-test("test", async ({ page }) => {
+test("test", async ({ page }, testInfo) => {
   test.setTimeout(4 * 60 * 60 * 1000); // 4 hours
+
+  // Distinguish files per browser project so Chrome and Edge running in
+  // parallel don't stomp on each other's progress/log files.
+  const browserTag = testInfo.project.name;
 
   // Clear browser cache and cookies before starting
   const client = await page.context().newCDPSession(page);
@@ -116,8 +120,9 @@ test("test", async ({ page }) => {
   await page.waitForTimeout(7000);
 
   // Clear the URL log file before starting
+  const currentUrlLogFile = `./test-data/current-url-${browserTag}.txt`;
   fs.writeFileSync(
-    "./test-data/current-url-worker1.txt",
+    currentUrlLogFile,
     "Stamping Submission URLs (PENALTY ONLY)\n========================================\n\n",
   );
 
@@ -131,7 +136,7 @@ test("test", async ({ page }) => {
   // Loop 40 times starting from the stamping upload
 
   // Progress tracking: Read last completed iteration
-  const progressFile = "./test-data/progress-SRN-PUMP-AMIRA-PENALTY.txt";
+  const progressFile = `./test-data/progress-SRN-PUMP-AMIRA-PENALTY-${browserTag}.txt`;
   let startIteration = 1;
 
   if (fs.existsSync(progressFile)) {
@@ -472,10 +477,7 @@ test("test", async ({ page }) => {
     console.log(`SRN extracted from PDF (${flowLabel}): ${srnValue}`);
 
     // Log the SRN
-    fs.appendFileSync(
-      "./test-data/current-url-worker1.txt",
-      `SRN: ${srnValue} (${flowLabel})\n`,
-    );
+    fs.appendFileSync(currentUrlLogFile, `SRN: ${srnValue} (${flowLabel})\n`);
     fs.appendFileSync(
       "./test-data/srn-permanent-log.txt",
       `[${new Date().toISOString()}] Loop ${i} | SRN: ${srnValue} | ${flowLabel}\n`,
@@ -541,7 +543,7 @@ test("test", async ({ page }) => {
     const namaPemegangValue = namaPemegang?.trim() || "";
     console.log(`Nama Pemegang SRN: ${namaPemegangValue}`);
     fs.appendFileSync(
-      "./test-data/current-url-worker1.txt",
+      currentUrlLogFile,
       `Nama Pemegang SRN: ${namaPemegangValue}\n`,
     );
     fs.appendFileSync(
@@ -711,7 +713,7 @@ test("test", async ({ page }) => {
     const namaPemegangValueEndorse = namaPemegangEndorse?.trim() || "";
     console.log(`Nama Pemegang SRN (Endorsement): ${namaPemegangValueEndorse}`);
     fs.appendFileSync(
-      "./test-data/current-url-worker1.txt",
+      currentUrlLogFile,
       `Nama Pemegang SRN (Endorsement): ${namaPemegangValueEndorse}\n`,
     );
     fs.appendFileSync(

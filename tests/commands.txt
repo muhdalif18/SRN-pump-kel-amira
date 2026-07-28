@@ -1,0 +1,90 @@
+SRN PUMP COMMANDS REFERENCE
+===========================
+
+SINGLE RUN (foreground, Chrome only, runs once)
+------------------------------------------------
+npm run srn-pump-amira-normal:one
+npm run srn-pump-amira-penalty:one
+npm run srn-pump-kel-normal:one
+npm run srn-pump-kel-penalty:one
+npm run srn-pump-kel-normal-fg:one
+npm run srn-pump-kel-penalty-fg:one
+
+
+PM2 "FOREVER" -- ONE PUMP AT A TIME (Chrome)
+---------------------------------------------
+npm run srn-pump-amira-normal:forever
+npm run srn-pump-amira-normal:logs
+npm run srn-pump-amira-normal:stop
+
+npm run srn-pump-amira-penalty:forever
+npm run srn-pump-amira-penalty:logs
+npm run srn-pump-amira-penalty:stop
+
+npm run srn-pump-kel-normal:forever
+npm run srn-pump-kel-normal:logs
+npm run srn-pump-kel-normal:stop
+
+npm run srn-pump-kel-penalty:forever
+npm run srn-pump-kel-penalty:logs
+npm run srn-pump-kel-penalty:stop
+
+npm run srn-pump-kel-normal-fg:forever
+npm run srn-pump-kel-normal-fg:logs
+npm run srn-pump-kel-normal-fg:stop
+
+npm run srn-pump-kel-penalty-fg:forever
+npm run srn-pump-kel-penalty-fg:logs
+npm run srn-pump-kel-penalty-fg:stop
+
+
+PM2 "FOREVER" -- SAME PUMPS, EDGE INSTEAD OF CHROME
+-----------------------------------------------------
+(same pattern, add ":edge" -- works for all 6 pumps above)
+npm run srn-pump-amira-normal:forever:edge
+npm run srn-pump-amira-normal:logs:edge
+npm run srn-pump-amira-normal:stop:edge
+... (amira-penalty, kel-normal, kel-penalty, kel-normal-fg, kel-penalty-fg follow the same pattern)
+
+
+RUN / STOP / CHECK ALL PUMPS AT ONCE
+--------------------------------------
+npm run bots:all          -- start every pump (Chrome only by default)
+npm run bots:stop-all     -- stop every pump
+npm run bots:status       -- pm2 status for everything
+
+
+SWITCHING BETWEEN CHROME-ONLY AND CHROME+EDGE
+-------------------------------------------------
+Controlled by the PUMP_BROWSERS env var read by ecosystem.config.cjs.
+Defaults to "chrome" if not set. Must set it the SAME way for both
+start and stop, otherwise bots:stop-all won't find the right app names.
+
+Chrome only (default):
+  npm run bots:all
+  npm run bots:stop-all
+
+Chrome + Edge, bash / Git Bash:
+  PUMP_BROWSERS=chrome,edge npm run bots:all
+  PUMP_BROWSERS=chrome,edge npm run bots:stop-all
+
+Chrome + Edge, PowerShell:
+  $env:PUMP_BROWSERS='chrome,edge'; npm run bots:all
+  $env:PUMP_BROWSERS='chrome,edge'; npm run bots:stop-all
+
+
+MONITORING DASHBOARD
+-----------------------
+npm run monitor
+  -> opens a local dashboard at http://localhost:4949
+     shows per-pump/browser progress, PM2 status, and a live log feed.
+
+
+NOTES
+-----
+- Each pump's progress is saved to test-data/progress-SRN-PUMP-<NAME>-<browser>.txt
+  Delete that file to reset a pump back to iteration 1.
+- test-data/srn-permanent-log.txt is the shared, append-only audit trail
+  across all pumps and all runs.
+- Playwright codegen (for recording new interactions):
+    npx playwright codegen --target typescript <url>

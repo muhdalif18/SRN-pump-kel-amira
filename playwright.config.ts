@@ -25,7 +25,12 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], viewport: null, deviceScaleFactor: undefined },
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        viewport: null,
+        deviceScaleFactor: undefined,
+      },
     },
     {
       name: "firefox",
