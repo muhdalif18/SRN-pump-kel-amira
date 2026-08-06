@@ -203,7 +203,7 @@ test("test", async ({ page }, testInfo) => {
     await page.locator("#DocTitleStep0").click();
     await page
       .locator("#DocTitleStep0")
-      .fill(`${docTitlePrefix}FOR EVERYONE USE. FEEL FREE TO USE ${i}`);
+      .fill(`${docTitlePrefix}FOR EVERYONE USE.  ${i}`);
     await page
       .getByRole("textbox", { name: "dd/MM/yyyy" })
       .first()

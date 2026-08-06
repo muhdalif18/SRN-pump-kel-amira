@@ -203,7 +203,7 @@ test("test", async ({ page }, testInfo) => {
     await page.locator("#DocTitleStep0").click();
     await page
       .locator("#DocTitleStep0")
-      .fill(`${docTitlePrefix}FOR EVERYONE USE. FEEL FREE TO USE ${i}`);
+      .fill(`${docTitlePrefix}FOR EVERYONE USE.  ${i}`);
     await page
       .getByRole("textbox", { name: "dd/MM/yyyy" })
       .first()
@@ -560,10 +560,7 @@ test("test", async ({ page }, testInfo) => {
     console.log(`SRN extracted from PDF (${flowLabel}): ${srnValue}`);
 
     // Log the SRN
-    fs.appendFileSync(
-      currentUrlLogFile,
-      `SRN: ${srnValue} (${flowLabel})\n`,
-    );
+    fs.appendFileSync(currentUrlLogFile, `SRN: ${srnValue} (${flowLabel})\n`);
     fs.appendFileSync(
       "./test-data/srn-permanent-log.txt",
       `[${new Date().toISOString()}] Loop ${i} | SRN: ${srnValue} | ${flowLabel}\n`,

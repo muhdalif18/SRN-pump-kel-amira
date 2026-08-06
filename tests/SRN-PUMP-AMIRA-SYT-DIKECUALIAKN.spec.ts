@@ -106,7 +106,9 @@ test("test", async ({ page }, testInfo) => {
   await page.getByText("Pengarah Syarikat / Pentadbir Organisasi").click();
   /* await page.getByText("Firma Ejen Duti Setem").click(); */
   const page1Promise = page.waitForEvent("popup");
-  await page.getByText("1 DEWANI ENTERPRISE SDN BHD").click();
+  await page
+    .getByText("EVERHOME FURNISHING SDN. BHD.(EVERHOME MARKETING (M) SDN BHD")
+    .click();
   await page.waitForTimeout(5000);
 
   await page
@@ -212,7 +214,7 @@ test("test", async ({ page }, testInfo) => {
     await page.locator("#DocTitleStep0").click();
     await page
       .locator("#DocTitleStep0")
-      .fill(`${docTitlePrefix}FOR EVERYONE USE. FEEL FREE TO USE ${i}`);
+      .fill(`${docTitlePrefix}FOR EVERYONE USE.  ${i}`);
     await page
       .getByRole("textbox", { name: "dd/MM/yyyy" })
       .first()
@@ -468,10 +470,7 @@ test("test", async ({ page }, testInfo) => {
     console.log(`SRN extracted from PDF: ${srnValue}`);
 
     // Log the SRN
-    fs.appendFileSync(
-      currentUrlLogFile,
-      `SRN: ${srnValue}\n`,
-    );
+    fs.appendFileSync(currentUrlLogFile, `SRN: ${srnValue}\n`);
     fs.appendFileSync(
       "./test-data/srn-permanent-log.txt",
       `[${new Date().toISOString()}] Loop ${i} | SRN: ${srnValue} | ${flowLabel}\n`,
