@@ -235,8 +235,18 @@ test("test", async ({ page }, testInfo) => {
       .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
       .check();
     await page
+      .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
+      .uncheck();
+    await page
+      .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
+      .check();
+    await page
       .locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]')
       .click();
+    await page
+      .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
+      .check();
+    await page.getByRole("radio", { name: "Individu" }).check();
     await page
       .locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]')
       .press("ControlOrMeta+a");

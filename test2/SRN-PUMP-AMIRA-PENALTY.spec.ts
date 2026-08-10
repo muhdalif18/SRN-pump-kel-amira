@@ -95,6 +95,7 @@ test("test", async ({ page }, testInfo) => {
   await page.getByText("Mulai 1 Januari 2023, format").click();
   await page.getByRole("button", { name: "Ok" }).click();
   await page.waitForTimeout(5000);
+  await page.waitForTimeout(5000);
 
   await page
     .getByText("Perkhidmatan ezHasil")
@@ -234,6 +235,13 @@ test("test", async ({ page }, testInfo) => {
     await page
       .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
       .check();
+    await page
+      .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
+      .uncheck();
+    await page
+      .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
+      .check();
+
     await page
       .locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]')
       .click();
@@ -778,9 +786,10 @@ test("test", async ({ page }, testInfo) => {
     await page.waitForTimeout(3000);
 
     await page.locator("tr.table-row").nth(1).click();
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(5000);
     await page.getByText("Tidak Indors").click();
     await page.getByText("Indors", { exact: true }).click();
+    await page.waitForTimeout(5000);
     await page.getByRole("button", { name: "Hantar" }).click();
     await page
       .getByText("Pengesahan Tindakan")

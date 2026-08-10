@@ -104,6 +104,14 @@ The suite has many near-parallel flows differing mainly by role, account, or whi
 
 - `scripts/monitor-dashboard.js` — a standalone Node HTTP server (no extra deps beyond the already-installed `pm2` package) serving a live-updating local dashboard at `http://localhost:4545` (override with `MONITOR_PORT`). It polls `pm2`'s programmatic API plus the `progress-*.txt` files for a small hardcoded list of apps (edit the `APPS` array at the top of the file to track more), and flags in the UI when a PM2 restart count jumps (likely crash) or a progress number hasn't moved in >10 minutes (likely a silent hang — see the 4-hour-timeout note above). Run with `node scripts/monitor-dashboard.js`.
 
+### 6) Selector file pattern (`tests/selectors/`)
+
+- `tests/selectors/formA.ts` exports a `FormA` object with selector factories for Bahagian A (Pihak Pertama) form fields. Use this instead of hardcoding selector strings in specs.
+- **Individu**: `FormA.individu(slot, idx)` — `slot` is the email/IC DOM slot number, `idx` is the `FormAIndividualList[idx]` index (0-based, increments per individu added). Both are auto-calculated in `SRN-TEST.spec.ts` — do not hardcode them.
+- **Syarikat**: `FormA.syarikat(slot, idx)` — same pattern; `idx` tracks `FormACompanyList[idx]`.
+- **Kerajaan**: `FormA.kerajaan(govIndex, slot)` — `govIndex` tracks `FormAGovList[govIndex]` (increments only for kerajaan parties); `slot` is the email DOM slot.
+- In `SRN-TEST.spec.ts`, Bahagian A is driven by a `formAParties` array — add/remove/change a party by editing that array only. The loop auto-calculates `slot`, `idx`, and `govIndex` via `individuCount`, `syarikatCount`, and `govCount` counters. Use `.last()` on radio buttons and Semak buttons to target the newly-added section. For govName dropdown, use `page.locator("li.suggestion-item", { hasText: govName }).first().click()` — `getByText()` hits both the heading and the dropdown item causing strict-mode violations.
+
 ## Project-specific notes for edits
 
 - If adding a new long-running automation spec, wire it in both places:
