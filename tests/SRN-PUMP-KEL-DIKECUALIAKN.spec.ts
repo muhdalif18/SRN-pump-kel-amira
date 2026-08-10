@@ -237,58 +237,20 @@ test("test", async ({ page }, testInfo) => {
       .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
       .check();
 
-    const telNoA0 = page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]');
-    const emailA0 = page.locator("#fld-email-ind-0Step1");
-    const addr1A0 = page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]');
-    const addr2A0 = page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]');
-    const addr3A0 = page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]');
-    const postcodeA0 = page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]');
-
     const randomAddrA0 = addresses[Math.floor(Math.random() * addresses.length)];
 
-    // Fill pass 1
-    for (let clickCount = 0; clickCount < 5; clickCount++) {
-      await telNoA0.click();
-      await page.waitForTimeout(1000);
-    }
-    await telNoA0.pressSequentially("0199999999", { delay: 150 });
-    await telNoA0.press("Tab");
-
-    for (let clickCount = 0; clickCount < 5; clickCount++) {
-      await emailA0.click();
-      await page.waitForTimeout(1000);
-    }
-    await emailA0.pressSequentially("test@gmail.com", { delay: 150 });
-
-    await addr1A0.fill(randomAddrA0.Addr1);
-    await addr2A0.fill(randomAddrA0.Addr2);
-    await addr3A0.fill(randomAddrA0.Addr3);
-    await postcodeA0.fill("50000");
-
-    await page.waitForTimeout(3000);
-
-    // Double validation pass — re-fill any field that came back empty
-    if (!(await telNoA0.inputValue())) {
-      for (let clickCount = 0; clickCount < 5; clickCount++) {
-        await telNoA0.click();
-        await page.waitForTimeout(1000);
-      }
-      await telNoA0.clear();
-      await telNoA0.pressSequentially("0199999999", { delay: 150 });
-      await telNoA0.press("Tab");
-    }
-    if (!(await emailA0.inputValue())) {
-      for (let clickCount = 0; clickCount < 5; clickCount++) {
-        await emailA0.click();
-        await page.waitForTimeout(1000);
-      }
-      await emailA0.clear();
-      await emailA0.pressSequentially("test@gmail.com", { delay: 150 });
-    }
-    if (!(await addr1A0.inputValue())) await addr1A0.fill(randomAddrA0.Addr1);
-    if (!(await addr2A0.inputValue())) await addr2A0.fill(randomAddrA0.Addr2);
-    if (!(await addr3A0.inputValue())) await addr3A0.fill(randomAddrA0.Addr3);
-    if (!(await postcodeA0.inputValue())) await postcodeA0.fill("50000");
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').fill('0199184986');
+    await page.locator('#fld-email-ind-0Step1').click();
+    await page.locator('#fld-email-ind-0Step1').fill('syed@gmail.com');
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').fill(randomAddrA0.Addr1);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').fill(randomAddrA0.Addr2);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').fill(randomAddrA0.Addr3);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').fill('15350');
 
     await page.waitForTimeout(1000);
 
