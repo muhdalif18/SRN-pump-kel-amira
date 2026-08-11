@@ -1,4 +1,4 @@
-import { test, chromium, firefox, webkit } from "@playwright/test";
+﻿import { test, chromium, firefox, webkit } from "@playwright/test";
 import * as fs from "fs";
 
 // Override to use Chrome browser
@@ -10,14 +10,13 @@ test.use({
 
 const namaList = ["Form of Transfer of Securites"];
 
-// Format today's date as dd/MM/yyyy for "tarikh biasa"
-function getCurrentDate(): string {
-  const d = new Date();
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
+// Penalty scenarios alternate between two dates every iteration:
+// 1 January -> Penalti 20%, 1 May -> Penalti 10%
+const PENALTY_DATE_JAN = "01/01/2026";
+const PENALTY_DATE_MAY = "02/05/2026";
+
+// Fixed penalty amount to insert every iteration
+const FIXED_PENALTY_AMOUNT = 843000000.0;
 
 test("test", async ({ page }, testInfo) => {
   test.setTimeout(4 * 60 * 60 * 1000); // 4 hours
@@ -130,23 +129,23 @@ test("test", async ({ page }, testInfo) => {
 
   await page.waitForTimeout(7000);
   // Clear the URL log file before starting
-  const currentUrlLogFile = `./test-data/current-url-fg-normal-${browserTag}.txt`;
+  const currentUrlLogFile = `./test-data/current-url-syt-penalty-${browserTag}.txt`;
   fs.writeFileSync(
     currentUrlLogFile,
-    "Stamping Submission URLs\n========================\n\n",
+    "Stamping Submission URLs (SYT PENALTY ONLY)\n========================================\n\n",
   );
 
   // Write a run separator to the permanent log
   const runTimestamp = new Date().toISOString();
   fs.appendFileSync(
     "./test-data/srn-permanent-log.txt",
-    `\n=== Run started: ${runTimestamp} ===\n`,
+    `\n=== Run started: ${runTimestamp} (SYT PENALTY ONLY) ===\n`,
   );
 
   // Loop 40 times starting from the stamping upload
 
   // Progress tracking: Read last completed iteration
-  const progressFile = `./test-data/progress-SRN-PUMP-KEL-NORMAL-FG-${browserTag}.txt`;
+  const progressFile = `./test-data/progress-SRN-PUMP-AMIRA-SYT-PENALTY-${browserTag}.txt`;
   let startIteration = 1;
 
   if (fs.existsSync(progressFile)) {
@@ -170,10 +169,15 @@ test("test", async ({ page }, testInfo) => {
     }
   }
 
+  // Every iteration is PENALTY, so the Jan/May alternation just tracks how many ran before resume
+  let penaltyOccurrenceCount = startIteration - 1;
+
   for (let i = startIteration; i <= 2000; i++) {
-    const dateToUse = getCurrentDate();
-    const docTitlePrefix = "";
-    const flowLabel = "NO PENALTY";
+    const isPenaltyJan = penaltyOccurrenceCount % 2 === 0;
+    penaltyOccurrenceCount++;
+    const dateToUse = isPenaltyJan ? PENALTY_DATE_JAN : PENALTY_DATE_MAY;
+    const docTitlePrefix = isPenaltyJan ? "Penalti 20% " : "Penalti 10% ";
+    const flowLabel = isPenaltyJan ? "PENALTI 20% (JAN)" : "PENALTI 10% (MAY)";
     console.log(
       `--- Loop iteration ${i} of XX --- [${flowLabel}] date=${dateToUse}`,
     );
@@ -239,7 +243,21 @@ test("test", async ({ page }, testInfo) => {
       .click();
     await page.locator("#fld-email-com-0Step1").click();
     await page.locator("#fld-email-com-0Step1").fill("syeddd@gmail.com");
-    await page.getByRole("button", { name: "Seterusnya " }).click();
+    const randomAddrA0 =
+      addresses[Math.floor(Math.random() * addresses.length)];
+    /* await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').fill('0199184986');
+    await page.locator('#fld-email-ind-0Step1').click();
+    await page.locator('#fld-email-ind-0Step1').fill('syed@gmail.com');
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').fill(randomAddrA0.Addr1);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').fill(randomAddrA0.Addr2);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').fill(randomAddrA0.Addr3);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').fill('15350'); */
+    await page.getByRole("button", { name: "Seterusnya " }).click();
     await page
       .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
       .check();
@@ -335,8 +353,8 @@ test("test", async ({ page }, testInfo) => {
     await page.locator("#StampingForm_formC_2_ShrTrf").fill("30000000");
     await page.getByRole("radio", { name: "Ringgit Malaysia" }).check();
     await page.getByRole("textbox", { name: "0.00" }).click();
-    const amountToUse =
-      Math.floor(Math.random() * (900000000 - 100000000 + 1)) + 100000000;
+    // Always use the fixed penalty amount for every iteration
+    const amountToUse = FIXED_PENALTY_AMOUNT;
 
     await page
       .getByRole("textbox", { name: "0.00" })

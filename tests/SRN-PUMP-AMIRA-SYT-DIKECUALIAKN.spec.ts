@@ -1,4 +1,4 @@
-import { test, chromium, firefox, webkit } from "@playwright/test";
+﻿import { test, chromium, firefox, webkit } from "@playwright/test";
 import * as fs from "fs";
 
 // Override to use Chrome browser
@@ -10,13 +10,18 @@ test.use({
 
 const namaList = ["Form of Transfer of Securites"];
 
-// Penalty scenarios alternate between two dates every iteration:
-// 1 January -> Penalti 20%, 1 May -> Penalti 10%
-const PENALTY_DATE_JAN = "01/01/2026";
-const PENALTY_DATE_MAY = "02/05/2026";
+// Flow pattern: every iteration is Duti Dikecualikan
+type FlowType = "DUTI_DIKECUALIKAN";
+const FLOW_PATTERN: FlowType[] = ["DUTI_DIKECUALIKAN"];
 
-// Fixed penalty amount to insert every iteration
-const FIXED_PENALTY_AMOUNT = 843000000.0;
+// Format today's date as dd/MM/yyyy for "tarikh biasa"
+function getCurrentDate(): string {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
 
 test("test", async ({ page }, testInfo) => {
   test.setTimeout(4 * 60 * 60 * 1000); // 4 hours
@@ -129,23 +134,23 @@ test("test", async ({ page }, testInfo) => {
 
   await page.waitForTimeout(7000);
   // Clear the URL log file before starting
-  const currentUrlLogFile = `./test-data/current-url-syt-penalty-${browserTag}.txt`;
+  const currentUrlLogFile = `./test-data/current-url-syt-dikecualiakn-${browserTag}.txt`;
   fs.writeFileSync(
     currentUrlLogFile,
-    "Stamping Submission URLs (SYT PENALTY ONLY)\n========================================\n\n",
+    "Stamping Submission URLs\n========================\n\n",
   );
 
   // Write a run separator to the permanent log
   const runTimestamp = new Date().toISOString();
   fs.appendFileSync(
     "./test-data/srn-permanent-log.txt",
-    `\n=== Run started: ${runTimestamp} (SYT PENALTY ONLY) ===\n`,
+    `\n=== Run started: ${runTimestamp} ===\n`,
   );
 
   // Loop 40 times starting from the stamping upload
 
   // Progress tracking: Read last completed iteration
-  const progressFile = `./test-data/progress-SRN-PUMP-AMIRA-SYT-PENALTY-${browserTag}.txt`;
+  const progressFile = `./test-data/progress-SRN-PUMP-AMIRA-SYT-DIKECUALIAKN-${browserTag}.txt`;
   let startIteration = 1;
 
   if (fs.existsSync(progressFile)) {
@@ -169,15 +174,12 @@ test("test", async ({ page }, testInfo) => {
     }
   }
 
-  // Every iteration is PENALTY, so the Jan/May alternation just tracks how many ran before resume
-  let penaltyOccurrenceCount = startIteration - 1;
-
   for (let i = startIteration; i <= 2000; i++) {
-    const isPenaltyJan = penaltyOccurrenceCount % 2 === 0;
-    penaltyOccurrenceCount++;
-    const dateToUse = isPenaltyJan ? PENALTY_DATE_JAN : PENALTY_DATE_MAY;
-    const docTitlePrefix = isPenaltyJan ? "Penalti 20% " : "Penalti 10% ";
-    const flowLabel = isPenaltyJan ? "PENALTI 20% (JAN)" : "PENALTI 10% (MAY)";
+    const flowType = FLOW_PATTERN[(i - 1) % FLOW_PATTERN.length];
+    const isDutiDikecualikan = flowType === "DUTI_DIKECUALIKAN";
+    const dateToUse = getCurrentDate();
+    const docTitlePrefix = isDutiDikecualikan ? "Duti Dikecualikan " : "";
+    const flowLabel = isDutiDikecualikan ? "DUTI DIKECUALIKAN" : "NO PENALTY";
     console.log(
       `--- Loop iteration ${i} of XX --- [${flowLabel}] date=${dateToUse}`,
     );
@@ -243,6 +245,20 @@ test("test", async ({ page }, testInfo) => {
       .click();
     await page.locator("#fld-email-com-0Step1").click();
     await page.locator("#fld-email-com-0Step1").fill("syeddd@gmail.com");
+    const randomAddrA0 =
+      addresses[Math.floor(Math.random() * addresses.length)];
+    /* await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').fill('0199184986');
+    await page.locator('#fld-email-ind-0Step1').click();
+    await page.locator('#fld-email-ind-0Step1').fill('syed@gmail.com');
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').fill(randomAddrA0.Addr1);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').fill(randomAddrA0.Addr2);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').fill(randomAddrA0.Addr3);
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').click();
+    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').fill('15350'); */
     await page.getByRole("button", { name: "Seterusnya " }).click();
     await page
       .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
@@ -339,8 +355,8 @@ test("test", async ({ page }, testInfo) => {
     await page.locator("#StampingForm_formC_2_ShrTrf").fill("30000000");
     await page.getByRole("radio", { name: "Ringgit Malaysia" }).check();
     await page.getByRole("textbox", { name: "0.00" }).click();
-    // Always use the fixed penalty amount for every iteration
-    const amountToUse = FIXED_PENALTY_AMOUNT;
+    const amountToUse =
+      Math.floor(Math.random() * (900000000 - 100000000 + 1)) + 100000000;
 
     await page
       .getByRole("textbox", { name: "0.00" })
@@ -465,10 +481,10 @@ test("test", async ({ page }, testInfo) => {
     const filename = download.suggestedFilename();
     const srnMatch = filename.match(/Slip_Pengesahan_(\d+)\.pdf/);
     const srnValue = srnMatch ? srnMatch[1] : "";
-    console.log(`SRN extracted from PDF (${flowLabel}): ${srnValue}`);
+    console.log(`SRN extracted from PDF: ${srnValue}`);
 
     // Log the SRN
-    fs.appendFileSync(currentUrlLogFile, `SRN: ${srnValue} (${flowLabel})\n`);
+    fs.appendFileSync(currentUrlLogFile, `SRN: ${srnValue}\n`);
     fs.appendFileSync(
       "./test-data/srn-permanent-log.txt",
       `[${new Date().toISOString()}] Loop ${i} | SRN: ${srnValue} | ${flowLabel}\n`,
@@ -652,6 +668,26 @@ test("test", async ({ page }, testInfo) => {
       .waitFor({ state: "visible", timeout: 20000 });
     await page.getByText("Tindakan - Taksiran Duti").nth(1).click();
     await page.waitForTimeout(3000); */
+
+    if (isDutiDikecualikan) {
+      //Duti Dikecualikan
+      await page
+        .getByText("Jenis Duti", { exact: true })
+        .waitFor({ state: "visible", timeout: 20000 });
+      await page.getByText("Jenis Duti", { exact: true }).click();
+      await page.getByRole("combobox").selectOption("3");
+      await page
+        .getByText("Perubahan ini akan")
+        .waitFor({ state: "visible", timeout: 20000 });
+      await page.getByText("Perubahan ini akan").click();
+      await page.getByRole("button", { name: "Ya" }).click();
+      await page.getByText("Jenis Peremitan / Pengecualian").click();
+      await page.getByRole("combobox").nth(1).selectOption("1");
+      await page
+        .getByText("Jumlah Perlu Dibayar :")
+        .waitFor({ state: "visible", timeout: 20000 });
+      await page.getByText("Jumlah Perlu Dibayar :").click();
+    }
 
     //
     await page
