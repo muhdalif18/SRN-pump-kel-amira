@@ -5,7 +5,7 @@ import * as fs from "fs";
 // browserName/channel come from the selected --project (chromium -> Chrome,
 // msedge -> Edge); only force headless here.
 test.use({
-  headless: true,
+  headless: false,
 });
 
 const namaList = ["Form of Transfer of Securites"];
@@ -231,20 +231,41 @@ test("test", async ({ page }, testInfo) => {
       .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
       .check();
 
-    const randomAddrA0 = addresses[Math.floor(Math.random() * addresses.length)];
+    const randomAddrA0 =
+      addresses[Math.floor(Math.random() * addresses.length)];
 
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').click();
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]').fill('0199184986');
-    await page.locator('#fld-email-ind-0Step1').click();
-    await page.locator('#fld-email-ind-0Step1').fill('syed@gmail.com');
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').click();
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]').fill(randomAddrA0.Addr1);
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').click();
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]').fill(randomAddrA0.Addr2);
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').click();
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]').fill(randomAddrA0.Addr3);
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').click();
-    await page.locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]').fill('15350');
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]')
+      .fill("0199184986");
+    await page.locator("#fld-email-ind-0Step1").click();
+    await page.locator("#fld-email-ind-0Step1").fill("syed@gmail.com");
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]')
+      .fill(randomAddrA0.Addr1);
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]')
+      .fill(randomAddrA0.Addr2);
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]')
+      .fill(randomAddrA0.Addr3);
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]')
+      .fill("15350");
 
     await page.waitForTimeout(1000);
 

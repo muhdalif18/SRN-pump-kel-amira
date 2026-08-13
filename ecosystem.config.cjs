@@ -14,6 +14,8 @@ const PUMPS = [
   { key: "amira-syt", spec: "SRN-PUMP-AMIRA-SYT" },
   { key: "amira-syt-penalty", spec: "SRN-PUMP-AMIRA-SYT-PENALTY" },
   { key: "amira-syt-dikecualiakn", spec: "SRN-PUMP-AMIRA-SYT-DIKECUALIAKN" },
+  { key: "amira-combined-syt", spec: "SRN-PUMP-AMIRA-COMBINED-SYT" },
+  { key: "kel-combined", spec: "SRN-PUMP-KEL-COMBINED" },
   { key: "kel-normal", spec: "SRN-PUMP-KEL-NORMAL" },
   { key: "kel-penalty", spec: "SRN-PUMP-KEL-PENALTY" },
   { key: "kel-normal-fg", spec: "SRN-PUMP-KEL-NORMAL-FG" },

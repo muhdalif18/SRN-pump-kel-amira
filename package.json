@@ -49,6 +49,14 @@
     "srn-pump-amira-syt-penalty:logs:edge": "pm2 logs srn-pump-amira-syt-penalty-edge-forever",
     "srn-pump-amira-syt-penalty:stop:edge": "pm2 delete srn-pump-amira-syt-penalty-edge-forever",
 
+    "srn-pump-amira-combined-syt:one": "playwright test tests/SRN-PUMP-AMIRA-COMBINED-SYT.spec.ts --project=chromium",
+    "srn-pump-amira-combined-syt:forever": "pm2 start ecosystem.config.cjs --only srn-pump-amira-combined-syt-chrome-forever",
+    "srn-pump-amira-combined-syt:logs": "pm2 logs srn-pump-amira-combined-syt-chrome-forever",
+    "srn-pump-amira-combined-syt:stop": "pm2 delete srn-pump-amira-combined-syt-chrome-forever",
+    "srn-pump-amira-combined-syt:forever:edge": "pm2 start ecosystem.config.cjs --only srn-pump-amira-combined-syt-edge-forever",
+    "srn-pump-amira-combined-syt:logs:edge": "pm2 logs srn-pump-amira-combined-syt-edge-forever",
+    "srn-pump-amira-combined-syt:stop:edge": "pm2 delete srn-pump-amira-combined-syt-edge-forever",
+
     "srn-pump-amira-syt-dikecualiakn:one": "playwright test tests/SRN-PUMP-AMIRA-SYT-DIKECUALIAKN.spec.ts --project=chromium",
     "srn-pump-amira-syt-dikecualiakn:forever": "pm2 start ecosystem.config.cjs --only srn-pump-amira-syt-dikecualiakn-chrome-forever",
     "srn-pump-amira-syt-dikecualiakn:logs": "pm2 logs srn-pump-amira-syt-dikecualiakn-chrome-forever",
@@ -88,6 +96,14 @@
     "srn-pump-kel-penalty-fg:forever:edge": "pm2 start ecosystem.config.cjs --only srn-pump-kel-penalty-fg-edge-forever",
     "srn-pump-kel-penalty-fg:logs:edge": "pm2 logs srn-pump-kel-penalty-fg-edge-forever",
     "srn-pump-kel-penalty-fg:stop:edge": "pm2 delete srn-pump-kel-penalty-fg-edge-forever",
+
+    "srn-pump-kel-combined:one": "playwright test tests/SRN-PUMP-KEL-COMBINED.spec.ts --project=chromium",
+    "srn-pump-kel-combined:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-combined-chrome-forever",
+    "srn-pump-kel-combined:logs": "pm2 logs srn-pump-kel-combined-chrome-forever",
+    "srn-pump-kel-combined:stop": "pm2 delete srn-pump-kel-combined-chrome-forever",
+    "srn-pump-kel-combined:forever:edge": "pm2 start ecosystem.config.cjs --only srn-pump-kel-combined-edge-forever",
+    "srn-pump-kel-combined:logs:edge": "pm2 logs srn-pump-kel-combined-edge-forever",
+    "srn-pump-kel-combined:stop:edge": "pm2 delete srn-pump-kel-combined-edge-forever",
 
     "srn-pump-kel-dikecualiakn:one": "playwright test tests/SRN-PUMP-KEL-DIKECUALIAKN.spec.ts --project=chromium",
     "srn-pump-kel-dikecualiakn:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-dikecualiakn-chrome-forever",
