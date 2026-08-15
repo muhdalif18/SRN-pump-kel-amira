@@ -58,95 +58,13 @@ test("test", async ({ page }, testInfo) => {
 
   const browserTag = testInfo.project.name;
 
-  // Clear browser cache and cookies before starting
   const client = await page.context().newCDPSession(page);
-  await client.send("Network.clearBrowserCache");
-  await client.send("Network.clearBrowserCookies");
 
   // Load addresses data
   const addressesData = JSON.parse(
     fs.readFileSync("./test-data/addresses_my.json", "utf-8"),
   );
   const addresses = addressesData.INDIVIDU;
-
-  //EDS SIDE
-  await page.goto("https://mytax-dev.hasil.gov.my/web/");
-  await page.waitForTimeout(3000);
-  await page.reload();
-  await page.waitForTimeout(6000);
-  await page
-    .getByRole("combobox")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.waitForTimeout(3000);
-
-  await page.getByRole("combobox").selectOption("1");
-  await page
-    .getByRole("textbox", { name: "No. Pengenalan" })
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByRole("textbox", { name: "No. Pengenalan" }).click();
-  await page.waitForTimeout(3000);
-  await page
-    .getByRole("textbox", { name: "No. Pengenalan" })
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page
-    .getByRole("textbox", { name: "No. Pengenalan" })
-    .fill("710424115474");
-  await page.waitForTimeout(2000);
-  await page
-    .getByRole("button", { name: "Hantar" })
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByRole("button", { name: "Hantar" }).click();
-  await page
-    .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page
-    .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
-    .click();
-  await page
-    .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
-    .fill("Passw0rd");
-  await page
-    .getByText("Percubaan Log Masuk Anda : 0 /")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByText("Percubaan Log Masuk Anda : 0 /").click();
-  await page
-    .getByText("Anda Ada 5 Percubaan Lagi")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByText("Anda Ada 5 Percubaan Lagi").click();
-  await page.getByText("Anda Ada 5 Percubaan Lagi").click();
-  await page
-    .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page
-    .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
-    .click();
-  await page.getByRole("button", { name: "Log Masuk" }).click();
-
-  await page
-    .getByText("Mulai 1 Januari 2023, format")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByText("Mulai 1 Januari 2023, format").click();
-  await page.getByRole("button", { name: "Ok" }).click();
-  await page.waitForTimeout(5000);
-
-  await page
-    .getByText("Perkhidmatan ezHasil")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByText("Perkhidmatan ezHasil").click();
-  await page
-    .getByText("Duti Setem 2.0 (UAT) e-Duti")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByText("Duti Setem 2.0 (UAT) e-Duti").click();
-
-  // Wait for new tab to open when clicking e-Duti Setem
-  const [newPage] = await Promise.all([
-    page.context().waitForEvent("page"),
-    page.getByRole("link", { name: "e-Duti Setem" }).click(),
-  ]);
-
-  await newPage.waitForLoadState();
-  page = newPage;
-  await page.waitForTimeout(7000);
 
   // Clear the URL log file before starting
   const currentUrlLogFile = `./test-data/current-url-kel-combined-${browserTag}.txt`;
@@ -200,6 +118,115 @@ test("test", async ({ page }, testInfo) => {
       getFlowParams(flow);
 
     console.log(`--- Step ${step} --- [${flowLabel}] date=${dateToUse}`);
+
+    // === Fresh session per iteration: close leftover tabs, clear cache + cookies, re-login ===
+    const allPages = page.context().pages();
+    for (const p of allPages.slice(1)) await p.close();
+    page = allPages[0];
+
+    await client.send("Network.clearBrowserCache");
+    await client.send("Network.clearBrowserCookies");
+
+    await page.goto("https://mytax-dev.hasil.gov.my/web/");
+    await page.waitForTimeout(3000);
+    await page.reload();
+    await page.waitForTimeout(6000);
+
+    // If still logged in (redirected to dashboard), log out first
+    const logoutBtn = page.locator("p.logout");
+    const alreadyLoggedIn = await logoutBtn.isVisible().catch(() => false);
+    if (alreadyLoggedIn) {
+      await logoutBtn.click();
+      await page
+        .locator("b", { hasText: "Log Keluar Berjaya" })
+        .waitFor({ state: "visible", timeout: 20000 });
+
+      await page.waitForTimeout(2000);
+      await page.goto("https://mytax-dev.hasil.gov.my/web/");
+      await page.waitForTimeout(5000);
+    }
+
+    await page
+      .getByRole("combobox")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.waitForTimeout(3000);
+
+    await page.getByRole("combobox").selectOption("1");
+    await page
+      .getByRole("textbox", { name: "No. Pengenalan" })
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.getByRole("textbox", { name: "No. Pengenalan" }).click();
+    await page.waitForTimeout(3000);
+    await page
+      .getByRole("textbox", { name: "No. Pengenalan" })
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page
+      .getByRole("textbox", { name: "No. Pengenalan" })
+      .fill("710424115474");
+    await page.waitForTimeout(2000);
+    await page
+      .getByRole("button", { name: "Hantar" })
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.getByRole("button", { name: "Hantar" }).click();
+    await page
+      .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page
+      .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
+      .click();
+    await page
+      .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
+      .fill("Passw0rd");
+    await page
+      .getByText("Percubaan Log Masuk Anda : 0 /")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.getByText("Percubaan Log Masuk Anda : 0 /").click();
+    await page
+      .getByText("Anda Ada 5 Percubaan Lagi")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.getByText("Anda Ada 5 Percubaan Lagi").click();
+    await page.getByText("Anda Ada 5 Percubaan Lagi").click();
+    await page
+      .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page
+      .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
+      .click();
+    await page.getByRole("button", { name: "Log Masuk" }).click();
+
+    // Notification modal only appears on first login of a fresh session — skip if absent
+    try {
+      await page
+        .getByText("Mulai 1 Januari 2023, format")
+        .waitFor({ state: "visible", timeout: 8000 });
+      await page.getByText("Mulai 1 Januari 2023, format").click();
+      await page.getByRole("button", { name: "Ok" }).click();
+    } catch {
+      // modal did not appear, continue
+    }
+
+    // Wait for dashboard to fully load before interacting with the menu
+    await page.waitForTimeout(5000);
+
+    await page
+      .getByText("Perkhidmatan ezHasil")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.getByText("Perkhidmatan ezHasil").click();
+    await page.waitForTimeout(2000);
+    await page
+      .getByText("Duti Setem 2.0 (UAT) e-Duti")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.getByText("Duti Setem 2.0 (UAT) e-Duti").click();
+
+    const [newPage] = await Promise.all([
+      page.context().waitForEvent("page"),
+      page.getByRole("link", { name: "e-Duti Setem" }).click(),
+    ]);
+
+    await newPage.waitForLoadState();
+    page = newPage;
+    await page.waitForTimeout(7000);
+    // =========================================================================================
 
     await page.goto("https://eds-uat.hasil.gov.my/stamping/upload");
     await page.waitForTimeout(5000);
@@ -302,7 +329,8 @@ test("test", async ({ page }, testInfo) => {
 
     await page.getByRole("button", { name: "Seterusnya " }).click();
 
-    await page
+    //Form
+    /* await page
       .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
       .check();
     await page
@@ -374,7 +402,57 @@ test("test", async ({ page }, testInfo) => {
       .click();
     await page
       .locator('input[name="StampingForm.FormBCompanyList[0].Postcode"]')
+      .fill("31500"); */
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Name"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Name"]')
+      .fill("aaaaa");
+    await page.locator("#IsCitizen_1").selectOption("1");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].IcNo"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].IcNo"]')
+      .fill("951004146116");
+    await page.getByRole("button", { name: "Semak" }).click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
+      .fill("0199184986");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
+      .press("Tab");
+    await page.getByRole("button", { name: "E-mel *" }).press("Tab");
+    await page.locator("#fld-email-ind-1-Step2").fill("syed@gmail.com");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr1"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr1"]')
+      .fill("Sungai Besi Expressway");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr2"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr2"]')
+      .fill("Cuba Rasa ");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr3"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr3"]')
+      .fill("W.P Kuala Loco");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Postcode"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Postcode"]')
       .fill("31500");
+    await page.waitForTimeout(3000);
 
     await page.getByRole("button", { name: "Seterusnya " }).click();
 
@@ -712,12 +790,9 @@ test("test", async ({ page }, testInfo) => {
     const namaPemegangElementEndorse = await page.locator(
       'div.columns-item:has-text("Nama Pemegang SRN") + div.columns-item span[data-expression][style*="font-weight: bold"]',
     );
-    const namaPemegangEndorse =
-      await namaPemegangElementEndorse.textContent();
+    const namaPemegangEndorse = await namaPemegangElementEndorse.textContent();
     const namaPemegangValueEndorse = namaPemegangEndorse?.trim() || "";
-    console.log(
-      `Nama Pemegang SRN (Endorsement): ${namaPemegangValueEndorse}`,
-    );
+    console.log(`Nama Pemegang SRN (Endorsement): ${namaPemegangValueEndorse}`);
     fs.appendFileSync(
       currentUrlLogFile,
       `Nama Pemegang SRN (Endorsement): ${namaPemegangValueEndorse}\n`,
