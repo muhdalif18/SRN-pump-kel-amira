@@ -8,7 +8,7 @@ test.use({
 });
 
 // ─── PASTE YOUR 50 SRNs HERE ────────────────────────────────────────────────
-const SRN_LIST: string[] = ["9992620175180415", "9992679414387927"];
+const SRN_LIST: string[] = ["9992670560493002"];
 // ────────────────────────────────────────────────────────────────────────────
 
 test("test", async ({ page }, testInfo) => {
@@ -46,7 +46,9 @@ test("test", async ({ page }, testInfo) => {
         if (startIndex >= SRN_LIST.length) {
           // All SRNs completed — restart from beginning automatically
           startIndex = 0;
-          console.log("All SRNs previously completed. Restarting from index 0.");
+          console.log(
+            "All SRNs previously completed. Restarting from index 0.",
+          );
           fs.appendFileSync(
             "./test-data/srn-permanent-log.txt",
             `[${new Date().toISOString()}] All SRNs completed. Auto-restart from index 0.\n`,

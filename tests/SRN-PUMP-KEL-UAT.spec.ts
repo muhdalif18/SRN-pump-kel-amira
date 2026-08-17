@@ -33,9 +33,9 @@ const PERANANS: Array<{
   {
     label: "BURACK VANASAPATI SDN BHD)",
     clickSequence: [
-      { text: "Pengarah Syarikat / Pentadbir Organisasi", exact: true }, // expand Firma Pengurusan
-      { text: "BURACK VANASAPATI SDN BHD", exact: true }, // expand Firma Ejen Duti Setem (nested)
-      //{ text: "YIK KEE RESTAURANT (KARAK) SDN. BHD.", exact: true }, // select the company
+      { text: "Firma Pengurusan", exact: true }, // expand Firma Pengurusan
+      { text: "Firma Guaman", exact: true }, // expand Firma Ejen Duti Setem (nested)
+      { text: "LO CHI SHING", exact: true }, // select the company
     ],
   },
 ];
@@ -104,7 +104,7 @@ test("test", async ({ page }, testInfo) => {
   await page.waitForTimeout(3000);
   await page
     .getByRole("textbox", { name: "No. Pengenalan" })
-    .fill("810923145705");
+    .fill("611001135170");
   await page.waitForTimeout(2000);
   await page
     .getByRole("button", { name: "Hantar" })
@@ -236,10 +236,14 @@ test("test", async ({ page }, testInfo) => {
       await page.waitForTimeout(3000);
     } else {
       // No EDS tab auto-opened — navigate via Perkhidmatan ezHasil on dashboard
-      await page.getByText("Perkhidmatan ezHasil").waitFor({ state: "visible", timeout: 20000 });
+      await page
+        .getByText("Perkhidmatan ezHasil")
+        .waitFor({ state: "visible", timeout: 20000 });
       await page.getByText("Perkhidmatan ezHasil").click();
       await page.waitForTimeout(2000);
-      await page.getByText("Duti Setem 2.0 (UAT) e-Duti").waitFor({ state: "visible", timeout: 20000 });
+      await page
+        .getByText("Duti Setem 2.0 (UAT) e-Duti")
+        .waitFor({ state: "visible", timeout: 20000 });
       await page.getByText("Duti Setem 2.0 (UAT) e-Duti").click();
       const [newEdsPage] = await Promise.all([
         page.context().waitForEvent("page"),
