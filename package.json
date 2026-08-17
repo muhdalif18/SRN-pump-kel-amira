@@ -113,7 +113,22 @@
     "srn-pump-kel-dikecualiakn:logs:edge": "pm2 logs srn-pump-kel-dikecualiakn-edge-forever",
     "srn-pump-kel-dikecualiakn:stop:edge": "pm2 delete srn-pump-kel-dikecualiakn-edge-forever",
 
-    "bots:all": "pm2 start ecosystem.config.cjs",
+    "srn-hits-only:one": "playwright test tests/SRN-HITS-ONLY.spec.ts --project=chromium --output=test-results-hits-only",
+    "srn-hits-only:forever": "pm2 start ecosystem.config.cjs --only srn-pump-hits-only-chrome-forever",
+    "srn-hits-only:logs": "pm2 logs srn-pump-hits-only-chrome-forever",
+    "srn-hits-only:stop": "pm2 delete srn-pump-hits-only-chrome-forever",
+
+    "srn-hits-only-dikecualikan:one": "playwright test tests/SRN-HITS-ONLY-DIKECUALIKAN.spec.ts --project=chromium --output=test-results-hits-only-dikecualikan",
+    "srn-hits-only-dikecualikan:forever": "pm2 start ecosystem.config.cjs --only srn-pump-hits-only-dikecualikan-chrome-forever",
+    "srn-hits-only-dikecualikan:logs": "pm2 logs srn-pump-hits-only-dikecualikan-chrome-forever",
+    "srn-hits-only-dikecualikan:stop": "pm2 delete srn-pump-hits-only-dikecualikan-chrome-forever",
+
+    "srn-pump-kel-uat:one": "playwright test tests/SRN-PUMP-KEL-UAT.spec.ts --project=chromium --output=test-results-kel-uat",
+    "srn-pump-kel-uat:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-uat-chrome-forever",
+    "srn-pump-kel-uat:logs": "pm2 logs srn-pump-kel-uat-chrome-forever",
+    "srn-pump-kel-uat:stop": "pm2 delete srn-pump-kel-uat-chrome-forever",
+
+"bots:all": "pm2 start ecosystem.config.cjs",
     "bots:stop-all": "pm2 delete ecosystem.config.cjs",
     "bots:status": "pm2 status",
 

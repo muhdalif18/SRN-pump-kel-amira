@@ -21,6 +21,9 @@ const PUMPS = [
   { key: "kel-normal-fg", spec: "SRN-PUMP-KEL-NORMAL-FG" },
   { key: "kel-penalty-fg", spec: "SRN-PUMP-KEL-PENALTY-FG" },
   { key: "kel-dikecualiakn", spec: "SRN-PUMP-KEL-DIKECUALIAKN" },
+  { key: "hits-only", spec: "SRN-HITS-ONLY" },
+  { key: "hits-only-dikecualikan", spec: "SRN-HITS-ONLY-DIKECUALIKAN" },
+  { key: "kel-uat", spec: "SRN-PUMP-KEL-UAT" },
 ];
 
 const BROWSER_PROJECTS = { chrome: "chromium", edge: "msedge" };

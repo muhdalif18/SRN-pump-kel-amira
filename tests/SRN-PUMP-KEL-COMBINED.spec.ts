@@ -403,26 +403,26 @@ test("test", async ({ page }, testInfo) => {
     await page
       .locator('input[name="StampingForm.FormBCompanyList[0].Postcode"]')
       .fill("31500"); */
-    await page
+    /* await page
       .locator('input[name="StampingForm.FormBIndividualList[0].Name"]')
       .click();
     await page
       .locator('input[name="StampingForm.FormBIndividualList[0].Name"]')
-      .fill("aaaaa");
+      .fill("DIA SAPUTRI");
     await page.locator("#IsCitizen_1").selectOption("1");
     await page
       .locator('input[name="StampingForm.FormBIndividualList[0].IcNo"]')
       .click();
     await page
       .locator('input[name="StampingForm.FormBIndividualList[0].IcNo"]')
-      .fill("951004146116");
+      .fill("590511025908");
     await page.getByRole("button", { name: "Semak" }).click();
     await page
       .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
       .click();
     await page
       .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
-      .fill("0199184986");
+      .fill("0199184966");
     await page
       .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
       .press("Tab");
@@ -451,11 +451,43 @@ test("test", async ({ page }, testInfo) => {
       .click();
     await page
       .locator('input[name="StampingForm.FormBIndividualList[0].Postcode"]')
-      .fill("31500");
+      .fill("31500"); */
+    await page
+      .getByRole("radio", { name: "Kerajaan / Badan Berkanun /" })
+      .check();
+    await page
+      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
+      .fill("Lembaga Ahli Geologi Malaysia");
+    await page.getByRole("listitem").click();
+    await page
+      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
+      .fill("0199184444");
+    await page.locator("#govEmail_1").click();
+    await page.locator("#govEmail_1").fill("lem@gmail.com");
+    await page.locator("#govAdd1_1").click();
+    await page.locator("#govAdd1_1").fill("232");
+    await page.locator("#govAdd1_1").press("Tab");
+    await page.locator("#govAdd2_1").fill("Lembaga");
+    await page.locator("#govAdd2_1").press("Tab");
+    await page.locator("#govAdd3_1").fill("Geo");
+    await page
+      .getByLabel("B. PIHAK KEDUA")
+      .getByText(
+        "Nama Seperti Dalam Surat Cara* Nombor Pendaftaran Pertubuhan / Persatuan",
+      )
+      .click();
+    await page.locator("#govPoscode_1").click();
+    await page.locator("#govPoscode_1").fill("15500");
     await page.waitForTimeout(3000);
 
     await page.getByRole("button", { name: "Seterusnya " }).click();
-
+    await page.waitForTimeout(2000);
     await page
       .getByRole("radio", { name: "Ada", exact: true })
       .waitFor({ state: "visible", timeout: 10000 });
