@@ -33,9 +33,9 @@ const PERANANS: Array<{
   {
     label: "BURACK VANASAPATI SDN BHD)",
     clickSequence: [
-      { text: "Firma Pengurusan", exact: true }, // expand Firma Pengurusan
-      { text: "Firma Guaman", exact: true }, // expand Firma Ejen Duti Setem (nested)
-      { text: "LO CHI SHING", exact: true }, // select the company
+      { text: "Individu", exact: true }, // expand Firma Pengurusan
+      // { text: "AL NAZ CURRY HOUSE ", exact: true }, // expand Firma Ejen Duti Setem (nested)
+      //{ text: "LO CHI SHING", exact: true }, // select the company
     ],
   },
 ];
@@ -104,7 +104,7 @@ test("test", async ({ page }, testInfo) => {
   await page.waitForTimeout(3000);
   await page
     .getByRole("textbox", { name: "No. Pengenalan" })
-    .fill("611001135170");
+    .fill("741206025640");
   await page.waitForTimeout(2000);
   await page
     .getByRole("button", { name: "Hantar" })
@@ -214,9 +214,13 @@ test("test", async ({ page }, testInfo) => {
     await pilihBtn.click();
     await page.waitForTimeout(1000);
 
-    // Click through the peranan options inside the modal
+    // Click through the peranan options inside the modal.
+    // Some texts (e.g. "Individu") also appear in the nav bar — use .last() to
+    // target the modal item, which always renders after the nav in DOM order.
     for (const { text, exact } of peranan.clickSequence) {
-      const locator = page.getByText(text, exact ? { exact: true } : undefined);
+      const locator = page
+        .getByText(text, exact ? { exact: true } : undefined)
+        .last();
       await locator.waitFor({ state: "visible", timeout: 20000 });
       await locator.click();
       await page.waitForTimeout(1000);

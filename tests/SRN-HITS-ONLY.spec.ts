@@ -7,10 +7,10 @@ test.use({
 
 // ─── PASTE YOUR 50 SRNs HERE ────────────────────────────────────────────────
 const SRN_LIST: string[] = [
-  "9992699722869072",
-  "9992652896480325",
-  "9992675661548132",
-  "9992627323718224",
+  "9992649727336484",
+  "9992690539918184",
+  "9992661542035548",
+  "9992627814278635",
 ];
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -49,6 +49,7 @@ test("test", async ({ page }, testInfo) => {
         if (startIndex >= SRN_LIST.length) {
           // All SRNs completed — restart from beginning automatically
           startIndex = 0;
+          fs.writeFileSync(progressFile, "-1"); // reset so interrupted restarts also begin from 0
           console.log(
             "All SRNs previously completed. Restarting from index 0.",
           );
@@ -392,5 +393,7 @@ test("test", async ({ page }, testInfo) => {
     }
   }
 
-  console.log("All SRNs processed.");
+  // Full cycle done — reset progress so next restart begins from index 0
+  fs.writeFileSync(progressFile, "-1");
+  console.log("All SRNs processed. Progress reset for next cycle.");
 });
