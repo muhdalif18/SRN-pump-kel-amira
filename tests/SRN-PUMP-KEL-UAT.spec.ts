@@ -387,25 +387,17 @@ test("test", async ({ page }, testInfo) => {
             await page.locator(sel).fill(val);
           }
         };
-        const regNo = await page
+        await page.locator("#KategoriPembayarDuti").selectOption("4");
+        await page
           .locator(
             'input[name="StampingForm.FormACompanyList[0].NewCompanyRegistrationNo"]',
           )
-          .inputValue()
-          .catch(() => "");
-        if (!regNo.trim()) {
-          await page.locator("#KategoriPembayarDuti").selectOption("4");
-          await page
-            .locator(
-              'input[name="StampingForm.FormACompanyList[0].NewCompanyRegistrationNo"]',
-            )
-            .fill("201001010221");
-          await page
-            .locator("#step1_div_NewCompanyRegistrationNo")
-            .getByRole("button", { name: "Semak" })
-            .click();
-          await page.waitForTimeout(3000);
-        }
+          .fill("200401032872");
+        await page
+          .locator("#step1_div_NewCompanyRegistrationNo")
+          .getByRole("button", { name: "Semak" })
+          .click();
+        await page.waitForTimeout(3000);
         await fillCom(
           'input[name="StampingForm.FormACompanyList[0].TelNo"]',
           "0199184982",

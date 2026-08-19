@@ -5,7 +5,7 @@ import * as fs from "fs";
 // browserName/channel come from the selected --project (chromium -> Chrome,
 // msedge -> Edge); only force headless here.
 test.use({
-  headless: true,
+  headless: false,
 });
 
 const namaList = ["Form of Transfer of Securites"];
@@ -199,7 +199,7 @@ test("test", async ({ page }, testInfo) => {
     await page.locator("#DocTitleStep0").click();
     await page
       .locator("#DocTitleStep0")
-      .fill(`${docTitlePrefix}FOR EVERYONE USE.  ${i}`);
+      .fill(`${docTitlePrefix}OBJECTION USE.  ${i}`);
     await page
       .getByRole("textbox", { name: "dd/MM/yyyy" })
       .first()

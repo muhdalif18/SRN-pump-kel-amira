@@ -5,7 +5,7 @@ import * as fs from "fs";
 // browserName/channel come from the selected --project (chromium -> Chrome,
 // msedge -> Edge); only force headless here.
 test.use({
-  headless: true,
+  headless: false,
 });
 
 const namaList = ["Form of Transfer of Securites"];
