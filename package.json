@@ -123,6 +123,8 @@
     "srn-hits-only-dikecualikan:logs": "pm2 logs srn-pump-hits-only-dikecualikan-chrome-forever",
     "srn-hits-only-dikecualikan:stop": "pm2 delete srn-pump-hits-only-dikecualikan-chrome-forever",
 
+    "srn-pump-uat-pindaan:one": "playwright test tests/SRN-PUMP-UAT-PINDAAN.spec.ts --project=chromium --output=test-results-uat-pindaan",
+    "srn-pump-uat-pindaan-second:one": "playwright test tests/SRN-pump-UAT-pindaan_second.spec.ts --project=chromium --output=test-results-uat-pindaan-second",
     "srn-pump-kel-uat:one": "playwright test tests/SRN-PUMP-KEL-UAT.spec.ts --project=chromium --output=test-results-kel-uat",
     "srn-pump-kel-uat:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-uat-chrome-forever",
     "srn-pump-kel-uat:logs": "pm2 logs srn-pump-kel-uat-chrome-forever",

@@ -104,7 +104,7 @@ test("test", async ({ page }, testInfo) => {
   await page.waitForTimeout(3000);
   await page
     .getByRole("textbox", { name: "No. Pengenalan" })
-    .fill("741206025640");
+    .fill("740726055400");
   await page.waitForTimeout(2000);
   await page
     .getByRole("button", { name: "Hantar" })
@@ -118,7 +118,7 @@ test("test", async ({ page }, testInfo) => {
     .click();
   await page
     .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
-    .fill("Passw0rd");
+    .fill("Password123");
   await page
     .getByText("Percubaan Log Masuk Anda : 0 /")
     .waitFor({ state: "visible", timeout: 20000 });
