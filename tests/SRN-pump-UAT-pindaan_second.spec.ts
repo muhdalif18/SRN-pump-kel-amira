@@ -33,9 +33,9 @@ const PERANANS: Array<{
   {
     label: "PERANAN)",
     clickSequence: [
-      { text: "Firma Pengurusan", exact: true }, // expand Firma Pengurusan
-      { text: "Firma Ejen Duti Setem", exact: true }, // expand Firma Ejen Duti Setem (nested)
-      { text: "HHL RESOURCES SENDIRIAN BERHAD", exact: true }, // select the company
+      { text: "Wakil Pengarah", exact: true }, // expand Firma Pengurusan
+      { text: "AL NAZ CURRY HOUSE", exact: true }, // expand Firma Ejen Duti Setem (nested)
+      //{ text: "HAFIZA CATERING", exact: true }, // select the company
     ],
   },
 ];
@@ -112,7 +112,7 @@ test("test", async ({ page }, testInfo) => {
   await page.waitForTimeout(3000);
   await page
     .getByRole("textbox", { name: "No. Pengenalan" })
-    .fill("860125085432");
+    .fill("741206025640");
   await page.waitForTimeout(2000);
   await page
     .getByRole("button", { name: "Hantar" })

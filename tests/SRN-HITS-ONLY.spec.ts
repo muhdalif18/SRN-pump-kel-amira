@@ -7,10 +7,13 @@ test.use({
 
 // ─── PASTE YOUR 50 SRNs HERE ────────────────────────────────────────────────
 const SRN_LIST: string[] = [
-  "9992649727336484",
-  "9992690539918184",
-  "9992661542035548",
-  "9992627814278635",
+  "9992644451394479",
+  "9992639118680775",
+  "9992633514706069",
+  "9992668728781893",
+  "9992635004078462",
+  "9992673186450373",
+  "9992614314288382",
 ];
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -125,7 +128,7 @@ test("test", async ({ page }, testInfo) => {
       await page.getByPlaceholder(" ").fill(srnValue);
       await page.getByRole("button", { name: " Cari" }).click();
 
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(4000);
       const namaPemegangElement = page.locator(
         'div.columns-item:has-text("Nama Pemegang SRN") + div.columns-item span[data-expression][style*="font-weight: bold"]',
       );
@@ -328,7 +331,9 @@ test("test", async ({ page }, testInfo) => {
       await page.waitForTimeout(3000);
       await page.locator("tr.table-row").nth(1).click();
       await page.waitForTimeout(3000);
+      //await page.getByText("Tindakan Indorsmen").click();
       await page.getByText("Tidak Indors").click();
+      await page.waitForTimeout(2000);
       await page.getByText("Indors", { exact: true }).click();
       await page.getByRole("button", { name: "Hantar" }).click();
       await page

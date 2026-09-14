@@ -31,11 +31,11 @@ const PERANANS: Array<{
   clickSequence: Array<{ text: string; exact?: boolean }>;
 }> = [
   {
-    label: "BURACK VANASAPATI SDN BHD)",
+    label: "JANGAN PERGIIIIIIIII)",
     clickSequence: [
-      { text: "Individu", exact: true }, // expand Firma Pengurusan
-      // { text: "AL NAZ CURRY HOUSE ", exact: true }, // expand Firma Ejen Duti Setem (nested)
-      //{ text: "LO CHI SHING", exact: true }, // select the company
+      { text: "Wakil Pengarah", exact: true }, // expand Firma Pengurusan
+      { text: "AL NAZ CURRY HOUSE", exact: true }, // expand Firma Ejen Duti Setem (nested)
+      //  { text: "UNIVERSAL MOTION PLT", exact: true }, // select the company
     ],
   },
 ];
@@ -104,7 +104,7 @@ test("test", async ({ page }, testInfo) => {
   await page.waitForTimeout(3000);
   await page
     .getByRole("textbox", { name: "No. Pengenalan" })
-    .fill("740726055400");
+    .fill("741206025640");
   await page.waitForTimeout(2000);
   await page
     .getByRole("button", { name: "Hantar" })
@@ -118,7 +118,7 @@ test("test", async ({ page }, testInfo) => {
     .click();
   await page
     .getByRole("textbox", { name: "Sila Masukkan Kata Laluan" })
-    .fill("Password123");
+    .fill("Passw0rd");
   await page
     .getByText("Percubaan Log Masuk Anda : 0 /")
     .waitFor({ state: "visible", timeout: 20000 });
@@ -164,7 +164,7 @@ test("test", async ({ page }, testInfo) => {
 
     // Alternate penalty percentage per outer iteration: odd = 20%, even = 10%
     const isPenalty20 = i % 2 === 1;
-    const penaltyDate = isPenalty20 ? "01/01/2026" : "01/05/2026";
+    const penaltyDate = isPenalty20 ? "01/01/2026" : "01/08/2026";
     const penaltyPct = isPenalty20 ? "20%" : "10%";
 
     const subFlows = [
@@ -393,10 +393,6 @@ test("test", async ({ page }, testInfo) => {
             'input[name="StampingForm.FormACompanyList[0].NewCompanyRegistrationNo"]',
           )
           .fill("200401032872");
-        await page
-          .locator("#step1_div_NewCompanyRegistrationNo")
-          .getByRole("button", { name: "Semak" })
-          .click();
         await page.waitForTimeout(3000);
         await fillCom(
           'input[name="StampingForm.FormACompanyList[0].TelNo"]',

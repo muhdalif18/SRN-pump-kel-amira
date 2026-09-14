@@ -24,6 +24,7 @@ const PUMPS = [
   { key: "hits-only", spec: "SRN-HITS-ONLY" },
   { key: "hits-only-dikecualikan", spec: "SRN-HITS-ONLY-DIKECUALIKAN" },
   { key: "kel-uat", spec: "SRN-PUMP-KEL-UAT" },
+  { key: "kel-uat-second", spec: "SRN-PUMP-KEL-UAT-SECOND" },
 ];
 
 const BROWSER_PROJECTS = { chrome: "chromium", edge: "msedge" };

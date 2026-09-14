@@ -13,7 +13,7 @@ const namaList = ["Form of Transfer of Securites"];
 // Penalty scenarios alternate between two dates every iteration:
 // 1 January -> Penalti 20%, 1 May -> Penalti 10%
 const PENALTY_DATE_JAN = "01/01/2026";
-const PENALTY_DATE_MAY = "01/05/2026";
+const PENALTY_DATE_MAY = "01/08/2026";
 
 // Maximum penalty amount to insert every iteration
 const MAX_PENALTY_AMOUNT = 843000000.0;
@@ -203,7 +203,7 @@ test("test", async ({ page }, testInfo) => {
     await page.locator("#DocTitleStep0").click();
     await page
       .locator("#DocTitleStep0")
-      .fill(`${docTitlePrefix}FOR EVERYONE USE.  ${i}`);
+      .fill(`${docTitlePrefix} OBJECTION USE.  ${i}`);
     await page
       .getByRole("textbox", { name: "dd/MM/yyyy" })
       .first()
@@ -918,8 +918,11 @@ test("test", async ({ page }, testInfo) => {
     await page.waitForTimeout(3000);
 
     await page.locator("tr.table-row").nth(1).click();
+    // await page.waitForTimeout(3000);
+    // await page.getByText("Tindakan Indorsmen").click();
     await page.waitForTimeout(3000);
     await page.getByText("Tidak Indors").click();
+    await page.waitForTimeout(2000);
     await page.getByText("Indors", { exact: true }).click();
     await page.getByRole("button", { name: "Hantar" }).click();
     await page

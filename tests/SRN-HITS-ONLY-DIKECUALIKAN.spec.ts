@@ -8,7 +8,7 @@ test.use({
 });
 
 // ─── PASTE YOUR 50 SRNs HERE ────────────────────────────────────────────────
-const SRN_LIST: string[] = ["9992695413088472"];
+const SRN_LIST: string[] = ["9992611502228419", "9992690231814501"];
 // ────────────────────────────────────────────────────────────────────────────
 
 test("test", async ({ page }, testInfo) => {
@@ -247,13 +247,11 @@ test("test", async ({ page }, testInfo) => {
       await page
         .locator(".choices__list--dropdown[aria-expanded='true']")
         .waitFor({ state: "visible", timeout: 10000 });
-      await page
-        .getByRole("option", { name: "DS 02 - Pengecualian #2" })
-        .click();
-      await page
+      await page.getByRole("option", { name: "Seksyen 15" }).click();
+      /* await page
         .getByText("Ulasan :")
         .waitFor({ state: "visible", timeout: 20000 });
-      await page.getByText("Ulasan :").click();
+      await page.getByText("Ulasan :").click(); */
 
       await page
         .getByRole("button", { name: "Prebiu Notis" })

@@ -5,7 +5,7 @@ import * as fs from "fs";
 // browserName/channel come from the selected --project (chromium -> Chrome,
 // msedge -> Edge); only force headless here.
 test.use({
-  headless: false,
+  headless: true,
 });
 
 const namaList = ["Form of Transfer of Securites"];
@@ -248,79 +248,43 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("button", { name: "Seterusnya " }).click();
     //end of Tambah Pihak Pertama
 
+    //
+
     await page
-      .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
+      .getByRole("radio", { name: "Kerajaan / Badan Berkanun /" })
       .check();
     await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].CompanyName"]')
+      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
       .click();
     await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].CompanyName"]')
-      .fill("TST SYAIRKAT");
+      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
+      .fill("Lembaga Ahli Geologi Malaysia");
+    await page.getByRole("listitem").click();
     await page
-      .locator('select[name="StampingForm.FormBCompanyList[0].CatTaxId"]')
-      .selectOption("4");
+      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
+      .click();
     await page
-      .locator(
-        'input[name="StampingForm.FormBCompanyList[0].OldCompanyRegistrationNo"]',
+      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
+      .fill("0199999999");
+    await page.locator("#govEmail_1").click();
+    await page.locator("#govEmail_1").fill("uat2@gmail.com");
+    await page.locator("#govAdd1_1").click();
+    await page.locator("#govAdd1_1").fill("Aras 8, Menara PjH");
+    await page.locator("#govAdd1_1").press("Tab");
+    await page.locator("#govAdd2_1").fill("No. 2, Jalan Tun Abdul Razak");
+    await page.locator("#govAdd2_1").press("Tab");
+    await page.locator("#govAdd3_1").fill("Presint 2");
+    await page
+      .getByLabel("B. PIHAK KEDUA")
+      .getByText(
+        "Nama Seperti Dalam Surat Cara* Nombor Pendaftaran Pertubuhan / Persatuan",
       )
       .click();
-    await page
-      .locator(
-        'input[name="StampingForm.FormBCompanyList[0].OldCompanyRegistrationNo"]',
-      )
-      .fill("200801028322");
-    await page.getByRole("button", { name: "Semak" }).first().click();
-    await page
-      .locator(
-        'input[name="StampingForm.FormBCompanyList[0].NewCompanyRegistrationNo"]',
-      )
-      .click();
-    await page
-      .locator(
-        'input[name="StampingForm.FormBCompanyList[0].NewCompanyRegistrationNo"]',
-      )
-      .fill("200801028322");
-    await page
-      .locator("#step2_div_NewCompanyRegistrationNo")
-      .getByRole("button", { name: "Semak" })
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].TelNo"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].TelNo"]')
-      .fill("0199184988");
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].Email"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].Email"]')
-      .fill("syed@gmaad.com");
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].ADDR1"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].ADDR1"]')
-      .fill("2123");
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].ADDR2"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].ADDR2"]')
-      .fill("1231");
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].ADDR3"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].ADDR3"]')
-      .fill("1231");
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].Postcode"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBCompanyList[0].Postcode"]')
-      .fill("31500");
+    await page.locator("#govPoscode_1").click();
+    await page.locator("#govPoscode_1").fill("62100");
+    await page.waitForTimeout(3000);
+
+    //
     await page.getByRole("button", { name: "Seterusnya " }).click();
 
     await page
@@ -775,6 +739,7 @@ test("test", async ({ page }, testInfo) => {
 
     await page.locator("tr.table-row").nth(1).click();
     await page.waitForTimeout(3000);
+    await page.getByText("Tindakan Indorsmen").click();
     await page.getByText("Tidak Indors").click();
     await page.getByText("Indors", { exact: true }).click();
     await page.getByRole("button", { name: "Hantar" }).click();

@@ -33,9 +33,9 @@ const PERANANS: Array<{
   {
     label: "PERANAN)",
     clickSequence: [
-      { text: "Firma Pengurusan", exact: true }, // expand Firma Pengurusan
-      { text: "Firma Guaman", exact: true }, // expand Firma Ejen Duti Setem (nested)
-      { text: "MUHAMMAD AMIRUL HAKEEM BIN MOHAMMAD HISHAM", exact: true }, // select the company
+      { text: "Individu", exact: true }, // expand Firma Pengurusan
+      //{ text: "Firma Guaman", exact: true }, // expand Firma Ejen Duti Setem (nested)
+      //{ text: "HARUM SEGIEMAS SDN BHD - LANGKAWI", exact: true }, // select the company
     ],
   },
 ];
@@ -112,7 +112,7 @@ test("test", async ({ page }, testInfo) => {
   await page.waitForTimeout(3000);
   await page
     .getByRole("textbox", { name: "No. Pengenalan" })
-    .fill("860125085432");
+    .fill("820820086019");
   await page.waitForTimeout(2000);
   await page
     .getByRole("button", { name: "Hantar" })

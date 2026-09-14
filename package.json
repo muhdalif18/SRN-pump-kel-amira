@@ -114,6 +114,7 @@
     "srn-pump-kel-dikecualiakn:stop:edge": "pm2 delete srn-pump-kel-dikecualiakn-edge-forever",
 
     "srn-hits-only:one": "playwright test tests/SRN-HITS-ONLY.spec.ts --project=chromium --output=test-results-hits-only",
+    "srn-hits-only-second:one": "playwright test tests/SRN-HITS-ONLY-SECOND.spec.ts --project=chromium --output=test-results-hits-only-second",
     "srn-hits-only:forever": "pm2 start ecosystem.config.cjs --only srn-pump-hits-only-chrome-forever",
     "srn-hits-only:logs": "pm2 logs srn-pump-hits-only-chrome-forever",
     "srn-hits-only:stop": "pm2 delete srn-pump-hits-only-chrome-forever",
@@ -125,10 +126,15 @@
 
     "srn-pump-uat-pindaan:one": "playwright test tests/SRN-PUMP-UAT-PINDAAN.spec.ts --project=chromium --output=test-results-uat-pindaan",
     "srn-pump-uat-pindaan-second:one": "playwright test tests/SRN-pump-UAT-pindaan_second.spec.ts --project=chromium --output=test-results-uat-pindaan-second",
+    "srn-pump-uat-pindaan-third:one": "playwright test tests/SRN-pump-UAT-pindaan-third.spec.ts --project=chromium --output=test-results-uat-pindaan-third",
     "srn-pump-kel-uat:one": "playwright test tests/SRN-PUMP-KEL-UAT.spec.ts --project=chromium --output=test-results-kel-uat",
     "srn-pump-kel-uat:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-uat-chrome-forever",
     "srn-pump-kel-uat:logs": "pm2 logs srn-pump-kel-uat-chrome-forever",
     "srn-pump-kel-uat:stop": "pm2 delete srn-pump-kel-uat-chrome-forever",
+    "srn-pump-kel-uat-second:one": "playwright test tests/SRN-PUMP-KEL-UAT-SECOND.spec.ts --project=chromium --output=test-results-kel-uat-second",
+    "srn-pump-kel-uat-second:forever": "pm2 start ecosystem.config.cjs --only srn-pump-kel-uat-second-chrome-forever",
+    "srn-pump-kel-uat-second:logs": "pm2 logs srn-pump-kel-uat-second-chrome-forever",
+    "srn-pump-kel-uat-second:stop": "pm2 delete srn-pump-kel-uat-second-chrome-forever",
 
 "bots:all": "pm2 start ecosystem.config.cjs",
     "bots:stop-all": "pm2 delete ecosystem.config.cjs",
