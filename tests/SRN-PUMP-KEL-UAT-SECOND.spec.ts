@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+﻿import { test } from "@playwright/test";
 import * as fs from "fs";
 
 test.use({
@@ -89,7 +89,7 @@ test("test", async ({ page }, testInfo) => {
 
   await page.goto("https://mytax-dev.hasil.gov.my/web/");
   await page.waitForTimeout(3000);
-  await page.reload();
+  try { await page.reload(); } catch (_) {}
   await page.waitForTimeout(6000);
 
   await page
@@ -303,14 +303,11 @@ test("test", async ({ page }, testInfo) => {
         .first()
         .waitFor({ state: "visible", timeout: 20000 });
       await page.getByRole("textbox", { name: "dd/MM/yyyy" }).first().click();
-      await page
-        .getByRole("textbox", { name: "dd/MM/yyyy" })
-        .first()
-        .fill(dateToUse);
-      await page
-        .getByRole("textbox", { name: "dd/MM/yyyy" })
-        .first()
-        .press("Enter");
+      const [_dd, _mm] = dateToUse.split("/");
+      const _mNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const _mName = _mNames[parseInt(_mm, 10) - 1];
+      await page.getByLabel("Month").first().selectOption(String(parseInt(_mm, 10) - 1));
+      await page.locator(".flatpickr-calendar.open").getByLabel(`${_mName} ${parseInt(_dd, 10)},`).click();
       await page.getByText("Tempat Surat Cara Ditandatangan*").click();
 
       await page.getByRole("radio", { name: "Luar Malaysia" }).check();
@@ -439,33 +436,26 @@ test("test", async ({ page }, testInfo) => {
       await page
         .getByRole("radio", { name: "Kerajaan / Badan Berkanun /" })
         .check();
+      await page.locator("#step2_div_GovName").getByRole("textbox").click();
       await page
-        .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
-        .click();
-      await page
-        .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
+        .locator("#step2_div_GovName")
+        .getByRole("textbox")
         .fill("Lembaga Ahli Geologi Malaysia");
       await page.getByRole("listitem").click();
-      await page
-        .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
-        .click();
-      await page
-        .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
-        .fill("0199999999");
+      await page.getByRole("radio", { name: "Pemilikan Asing" }).check();
+      await page.getByRole("radio", { name: "Pemilikan Tempatan" }).check();
+      await page.getByRole("textbox").nth(3).click();
+      await page.getByRole("textbox").nth(3).fill("0199999999");
       await page.locator("#govEmail_1").click();
       await page.locator("#govEmail_1").fill("uat2@gmail.com");
       await page.locator("#govAdd1_1").click();
       await page.locator("#govAdd1_1").fill("Aras 8, Menara PjH");
-      await page.locator("#govAdd1_1").press("Tab");
+      await page.locator("#govAdd2_1").click();
+      await page.locator("#govAdd1_1").fill("Aras 8, Menara PjH");
+      await page.locator("#govAdd2_1").click();
       await page.locator("#govAdd2_1").fill("No. 2, Jalan Tun Abdul Razak");
-      await page.locator("#govAdd2_1").press("Tab");
+      await page.locator("#govAdd3_1").click();
       await page.locator("#govAdd3_1").fill("Presint 2");
-      await page
-        .getByLabel("B. PIHAK KEDUA")
-        .getByText(
-          "Nama Seperti Dalam Surat Cara* Nombor Pendaftaran Pertubuhan / Persatuan",
-        )
-        .click();
       await page.locator("#govPoscode_1").click();
       await page.locator("#govPoscode_1").fill("62100");
       await page.waitForTimeout(3000);
@@ -493,7 +483,7 @@ test("test", async ({ page }, testInfo) => {
       await page.waitForTimeout(1500);
 
       const openCal = page.locator(".flatpickr-calendar.open");
-      await page.locator("#section1 input[placeholder='dd/MM/yyyy']").click();
+      await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
       await page.waitForTimeout(3000);
       await openCal.waitFor({ state: "visible", timeout: 20000 });
       await openCal
@@ -585,17 +575,30 @@ test("test", async ({ page }, testInfo) => {
       await page.getByRole("button", { name: "Hantar " }).click();
       await page.getByRole("button", { name: "Ya, Hantar" }).click();
 
+    // Wait for success modal "Berjaya - Permohonan berjaya dihantar." then click OK
+    await page.locator("#ds-popup-message").waitFor({ state: "visible", timeout: 20000 });
+    await page.locator("button.ds-popup-btn-confirm").click();
+
       await page
         .getByRole("button", { name: "Kembali ke Paparan Utama" })
         .waitFor({ state: "visible", timeout: 20000 });
       await page.waitForTimeout(2000);
-      await page
-        .getByText("Cetak Slip Pengesahan")
-        .waitFor({ state: "visible", timeout: 20000 });
-
-      const downloadPromise = page.waitForEvent("download");
-      await page.getByText("Cetak Slip Pengesahan").click();
-      const download = await downloadPromise;
+      const cetakBtn = page.locator("button.btn-std", { hasText: "Cetak Slip Pengesahan" });
+      await cetakBtn.waitFor({ state: "visible", timeout: 20000 });
+      await cetakBtn.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+      let download = null;
+      for (let _attempt = 0; _attempt < 3; _attempt++) {
+        try {
+          const dlPromise = page.waitForEvent("download", { timeout: 10000 });
+          await cetakBtn.click({ force: true });
+          download = await dlPromise;
+          break;
+        } catch {
+          await page.waitForTimeout(1000);
+        }
+      }
+      if (!download) throw new Error("Cetak Slip Pengesahan failed after 3 attempts");
 
       const filename = download.suggestedFilename();
       const srnMatch = filename.match(/Slip_Pengesahan_(\d+)\.pdf/);

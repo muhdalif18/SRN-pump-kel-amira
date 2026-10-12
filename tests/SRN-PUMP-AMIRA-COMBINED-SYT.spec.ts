@@ -1,7 +1,9 @@
-import { test, chromium, firefox, webkit } from "@playwright/test";
+﻿import { test, chromium, firefox, webkit } from "@playwright/test";
 import * as fs from "fs";
 
 test.use({
+  browserName: "chromium",
+  channel: "chrome",
   headless: false,
 });
 
@@ -52,6 +54,24 @@ function getFlowParams(flow: FlowType): {
     };
   }
 }
+
+// ─── PERANAN CONFIG ──────────────────────────────────────────────────────────
+// Cycles through these per outer iteration.
+// Each iteration: goto dashboard-content → click the blue Pilihan Peranan button
+// → execute clickSequence items inside the modal.
+const PERANANS: Array<{
+  label: string;
+  clickSequence: Array<{ text: string; exact?: boolean }>;
+}> = [
+  {
+    label: "JANGAN PERGIIIIIIIII)",
+    clickSequence: [
+      { text: "Wakil Pengarah", exact: true },
+      { text: "AL NAZ CURRY HOUSE", exact: true },
+    ],
+  },
+];
+// ─────────────────────────────────────────────────────────────────────────────
 
 test("test", async ({ page }, testInfo) => {
   test.setTimeout(4 * 60 * 60 * 1000); // 4 hours
@@ -129,7 +149,7 @@ test("test", async ({ page }, testInfo) => {
 
     await page.goto("https://mytax-dev.hasil.gov.my/web/");
     await page.waitForTimeout(3000);
-    await page.reload();
+    try { await page.reload(); } catch (_) {}
     await page.waitForTimeout(6000);
 
     // If still logged in (redirected to dashboard), log out first
@@ -243,12 +263,71 @@ test("test", async ({ page }, testInfo) => {
     await page.waitForTimeout(7000);
     // =========================================================================================
 
+    const peranan = PERANANS[(i - 1) % PERANANS.length];
+
+    // ── Close any extra tabs from previous EDS session ───────────────────────
+    const _allPages = page.context().pages();
+    for (const p of _allPages.slice(1)) await p.close();
+    page = _allPages[0];
+
+    // ── Navigate to MyTax dashboard and change peranan ───────────────────────
+    await page.goto("https://mytax-dev.hasil.gov.my/web/dashboard-content");
+    await page.waitForTimeout(3000);
+
+    const pilihBtn = page.locator(".ic-container").first();
+    await pilihBtn.waitFor({ state: "visible", timeout: 20000 });
+    await pilihBtn.click();
+    await page.waitForTimeout(1000);
+
+    for (const { text, exact } of peranan.clickSequence) {
+      const locator = page
+        .getByText(text, exact ? { exact: true } : undefined)
+        .last();
+      await locator.waitFor({ state: "visible", timeout: 20000 });
+      await locator.click();
+      await page.waitForTimeout(1000);
+    }
+    await page.waitForTimeout(5000);
+
+    // If peranan change auto-opened a new EDS tab, switch page to it.
+    const _allPagesAfter = page.context().pages();
+    const edsTabAuto = _allPagesAfter.find((p) =>
+      p.url().includes("eds-uat.hasil.gov.my"),
+    );
+    if (edsTabAuto) {
+      page = edsTabAuto;
+      await page.waitForLoadState();
+      await page.waitForTimeout(3000);
+    } else {
+      await page
+        .getByText("Perkhidmatan ezHasil")
+        .waitFor({ state: "visible", timeout: 20000 });
+      await page.getByText("Perkhidmatan ezHasil").click();
+      await page.waitForTimeout(2000);
+      await page
+        .getByText("Duti Setem 2.0 (UAT) e-Duti")
+        .waitFor({ state: "visible", timeout: 20000 });
+      await page.getByText("Duti Setem 2.0 (UAT) e-Duti").click();
+      const [newEdsPage] = await Promise.all([
+        page.context().waitForEvent("page"),
+        page.getByRole("link", { name: "e-Duti Setem" }).click(),
+      ]);
+      await newEdsPage.waitForLoadState();
+      page = newEdsPage;
+      await page.waitForTimeout(3000);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     await page.goto("https://eds-uat.hasil.gov.my/stamping/upload");
     await page.waitForTimeout(5000);
-    await page
-      .getByRole("button", { name: "Faham" })
-      .waitFor({ state: "visible", timeout: 20000 });
-    await page.getByRole("button", { name: "Faham" }).click();
+    try {
+      await page
+        .getByRole("button", { name: "Faham" })
+        .waitFor({ state: "visible", timeout: 8000 });
+      await page.getByRole("button", { name: "Faham" }).click();
+    } catch {
+      // banner notification did not appear, continue
+    }
     await page
       .locator("#fileInput_single")
       .setInputFiles("./test-data/image (19).png");
@@ -278,14 +357,11 @@ test("test", async ({ page }, testInfo) => {
       .first()
       .waitFor({ state: "visible", timeout: 20000 });
     await page.getByRole("textbox", { name: "dd/MM/yyyy" }).first().click();
-    await page
-      .getByRole("textbox", { name: "dd/MM/yyyy" })
-      .first()
-      .fill(dateToUse);
-    await page
-      .getByRole("textbox", { name: "dd/MM/yyyy" })
-      .first()
-      .press("Enter");
+    const [_dd, _mm] = dateToUse.split("/");
+    const _mNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const _mName = _mNames[parseInt(_mm, 10) - 1];
+    await page.getByLabel("Month").first().selectOption(String(parseInt(_mm, 10) - 1));
+    await page.locator(".flatpickr-calendar.open").getByLabel(`${_mName} ${parseInt(_dd, 10)},`).click();
     await page.getByText("Tempat Surat Cara Ditandatangan*").click();
 
     await page.getByRole("radio", { name: "Luar Malaysia" }).check();
@@ -432,33 +508,26 @@ test("test", async ({ page }, testInfo) => {
     await page
       .getByRole("radio", { name: "Kerajaan / Badan Berkanun /" })
       .check();
+    await page.locator("#step2_div_GovName").getByRole("textbox").click();
     await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
+      .locator("#step2_div_GovName")
+      .getByRole("textbox")
       .fill("Lembaga Ahli Geologi Malaysia");
     await page.getByRole("listitem").click();
-    await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
-      .fill("0199184444");
+    await page.getByRole("radio", { name: "Pemilikan Asing" }).check();
+    await page.getByRole("radio", { name: "Pemilikan Tempatan" }).check();
+    await page.getByRole("textbox").nth(3).click();
+    await page.getByRole("textbox").nth(3).fill("0199184444");
     await page.locator("#govEmail_1").click();
     await page.locator("#govEmail_1").fill("lem@gmail.com");
     await page.locator("#govAdd1_1").click();
     await page.locator("#govAdd1_1").fill("232");
-    await page.locator("#govAdd1_1").press("Tab");
+    await page.locator("#govAdd2_1").click();
+    await page.locator("#govAdd1_1").fill("232");
+    await page.locator("#govAdd2_1").click();
     await page.locator("#govAdd2_1").fill("Lembaga");
-    await page.locator("#govAdd2_1").press("Tab");
+    await page.locator("#govAdd3_1").click();
     await page.locator("#govAdd3_1").fill("Geo");
-    await page
-      .getByLabel("B. PIHAK KEDUA")
-      .getByText(
-        "Nama Seperti Dalam Surat Cara* Nombor Pendaftaran Pertubuhan / Persatuan",
-      )
-      .click();
     await page.locator("#govPoscode_1").click();
     await page.locator("#govPoscode_1").fill("15500");
     await page.waitForTimeout(3000);
@@ -487,7 +556,7 @@ test("test", async ({ page }, testInfo) => {
 
     const openCal = page.locator(".flatpickr-calendar.open");
 
-    await page.locator("#section1 input[placeholder='dd/MM/yyyy']").click();
+    await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
     await page.waitForTimeout(3000);
     await openCal.waitFor({ state: "visible", timeout: 20000 });
     await openCal
@@ -571,18 +640,31 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("button", { name: "Hantar " }).click();
     await page.getByRole("button", { name: "Ya, Hantar" }).click();
 
+    // Wait for success modal "Berjaya - Permohonan berjaya dihantar." then click OK
+    await page.locator(".swal2-popup.swal2-icon-success").waitFor({ state: "visible", timeout: 20000 });
+    await page.locator("button.swal2-confirm").click();
+
     await page
       .getByRole("button", { name: "Kembali ke Paparan Utama" })
       .waitFor({ state: "visible", timeout: 20000 });
 
     await page.waitForTimeout(2000);
-    await page
-      .getByText("Cetak Slip Pengesahan")
-      .waitFor({ state: "visible", timeout: 20000 });
-
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByText("Cetak Slip Pengesahan").click();
-    const download = await downloadPromise;
+    const cetakBtn = page.locator("button.btn-std", { hasText: "Cetak Slip Pengesahan" });
+    await cetakBtn.waitFor({ state: "visible", timeout: 20000 });
+    await cetakBtn.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    let download = null;
+    for (let _attempt = 0; _attempt < 3; _attempt++) {
+      try {
+        const dlPromise = page.waitForEvent("download", { timeout: 10000 });
+        await cetakBtn.click({ force: true });
+        download = await dlPromise;
+        break;
+      } catch {
+        await page.waitForTimeout(1000);
+      }
+    }
+    if (!download) throw new Error("Cetak Slip Pengesahan failed after 3 attempts");
 
     const filename = download.suggestedFilename();
     const srnMatch = filename.match(/Slip_Pengesahan_(\d+)\.pdf/);

@@ -1,8 +1,10 @@
-import { test } from "@playwright/test";
+﻿import { test } from "@playwright/test";
 import * as fs from "fs";
 
 test.use({
-  headless: false,
+  browserName: "chromium",
+  channel: "chrome",
+  headless: true,
 });
 
 const namaList = ["Form of Transfer of Securites"];
@@ -14,6 +16,32 @@ function getCurrentDate(): string {
   const year = d.getFullYear();
   return `${day}/${month}/${year}`;
 }
+
+// ─── PERANAN CONFIG ──────────────────────────────────────────────────────────
+// Cycles through these per outer iteration.
+// Each iteration: goto dashboard-content → click the blue Pilihan Peranan button
+// → execute clickSequence items inside the modal.
+//
+// clickSequence: clicks to make INSIDE the "Pilihan Peranan" modal after it opens.
+//   For Individu:       [{ text: "Individu", exact: true }]
+//   For Firma Guaman company:
+//     [{ text: "Firma Guaman" }, { text: "UNIVERSAL MOTION PLT" }]
+//   Expand a collapsed category first (e.g. "Firma Pengurusan"), then sub-category,
+//   then company.
+const PERANANS: Array<{
+  label: string;
+  clickSequence: Array<{ text: string; exact?: boolean }>;
+}> = [
+  {
+    label: "JANGAN PERGIIIIIIIII)",
+    clickSequence: [
+      { text: "Individu", exact: true },
+      // { text: "Firma Ejen Duti Setem", exact: true },
+      //  { text: "HHL RESOURCES SENDIRIAN BERHAD - ISKANDAR PUTERI", exact: true }, // expand Firma Ejen Duti Setem (nested)
+    ],
+  },
+];
+// ─────────────────────────────────────────────────────────────────────────────
 
 test("test", async ({ page }, testInfo) => {
   test.setTimeout(4 * 60 * 60 * 1000); // 4 hours
@@ -34,7 +62,9 @@ test("test", async ({ page }, testInfo) => {
   //EDS SIDE
   await page.goto("https://mytax-dev.hasil.gov.my/web/");
   await page.waitForTimeout(3000);
-  await page.reload();
+  try {
+    await page.reload();
+  } catch (_) {}
   await page.waitForTimeout(6000);
   await page
     .getByRole("combobox")
@@ -84,34 +114,27 @@ test("test", async ({ page }, testInfo) => {
     .click();
   await page.getByRole("button", { name: "Log Masuk" }).click();
 
-  await page
-    .getByText("Mulai 1 Januari 2023, format")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByText("Mulai 1 Januari 2023, format").click();
-  await page.getByRole("button", { name: "Ok" }).click();
+  // Notification modal — may or may not appear
+  try {
+    await page
+      .getByText("Mulai 1 Januari 2023, format")
+      .waitFor({ state: "visible", timeout: 8000 });
+    await page.getByText("Mulai 1 Januari 2023, format").click();
+    await page.getByRole("button", { name: "Ok" }).click();
+  } catch {
+    // modal did not appear, continue
+  }
+
   await page.waitForTimeout(5000);
 
-  await page
-    .getByText("Perkhidmatan ezHasil")
-    .waitFor({ state: "visible", timeout: 20000 });
-  await page.getByText("Perkhidmatan ezHasil").click();
-  await page
-    .getByText("Duti Setem 2.0 (UAT) e-Duti")
-    .waitFor({ state: "visible", timeout: 20000 });
-
-  await page.getByText("Duti Setem 2.0 (UAT) e-Duti").click();
-
-  // Wait for new tab to open when clicking e-Duti Setem
-  const [newPage] = await Promise.all([
-    page.context().waitForEvent("page"),
-    page.getByRole("link", { name: "e-Duti Setem" }).click(),
-  ]);
-
-  // Switch to the new tab
-  await newPage.waitForLoadState();
-  page = newPage;
-
-  await page.waitForTimeout(7000);
+  // Safety: dismiss modal if appeared late
+  try {
+    const lateModal = page.getByText("Mulai 1 Januari 2023, format");
+    if (await lateModal.isVisible()) {
+      await page.getByRole("button", { name: "Ok" }).click();
+      await page.waitForTimeout(1000);
+    }
+  } catch {}
 
   // Clear the URL log file before starting
   const currentUrlLogFile = `./test-data/current-url-${browserTag}.txt`;
@@ -154,14 +177,75 @@ test("test", async ({ page }, testInfo) => {
 
   for (let i = startIteration; i <= 2000; i++) {
     const flowLabel = "NORMAL";
-    console.log(`--- Loop iteration ${i} of XX --- [${flowLabel}]`);
+    const peranan = PERANANS[(i - 1) % PERANANS.length];
+    console.log(
+      `--- Loop iteration ${i} | peranan: ${peranan.label} | [${flowLabel}]`,
+    );
+
+    // ── Close any extra tabs from previous EDS session ───────────────────────
+    const allPages = page.context().pages();
+    for (const p of allPages.slice(1)) await p.close();
+    page = allPages[0];
+
+    // ── Navigate to MyTax dashboard and change peranan ───────────────────────
+    await page.goto("https://mytax-dev.hasil.gov.my/web/dashboard-content");
+    await page.waitForTimeout(3000);
+
+    const pilihBtn = page.locator(".ic-container").first();
+    await pilihBtn.waitFor({ state: "visible", timeout: 20000 });
+    await pilihBtn.click();
+    await page.waitForTimeout(1000);
+
+    for (const { text, exact } of peranan.clickSequence) {
+      const locator = page
+        .getByText(text, exact ? { exact: true } : undefined)
+        .last();
+      await locator.waitFor({ state: "visible", timeout: 20000 });
+      await locator.click();
+      await page.waitForTimeout(1000);
+    }
+    await page.waitForTimeout(5000);
+
+    // If peranan change auto-opened a new EDS tab, switch page to it.
+    const allPagesAfter = page.context().pages();
+    const edsTabAuto = allPagesAfter.find((p) =>
+      p.url().includes("eds-uat.hasil.gov.my"),
+    );
+    if (edsTabAuto) {
+      page = edsTabAuto;
+      await page.waitForLoadState();
+      await page.waitForTimeout(3000);
+    } else {
+      // No EDS tab auto-opened — navigate via Perkhidmatan ezHasil on dashboard
+      await page
+        .getByText("Perkhidmatan ezHasil")
+        .waitFor({ state: "visible", timeout: 20000 });
+      await page.getByText("Perkhidmatan ezHasil").click();
+      await page.waitForTimeout(2000);
+      await page
+        .getByText("Duti Setem 2.0 (UAT) e-Duti")
+        .waitFor({ state: "visible", timeout: 20000 });
+      await page.getByText("Duti Setem 2.0 (UAT) e-Duti").click();
+      const [newEdsPage] = await Promise.all([
+        page.context().waitForEvent("page"),
+        page.getByRole("link", { name: "e-Duti Setem" }).click(),
+      ]);
+      await newEdsPage.waitForLoadState();
+      page = newEdsPage;
+      await page.waitForTimeout(3000);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     await page.goto("https://eds-uat.hasil.gov.my/stamping/upload");
     await page.waitForTimeout(5000);
-    await page
-      .getByRole("button", { name: "Faham" })
-      .waitFor({ state: "visible", timeout: 20000 });
-    await page.getByRole("button", { name: "Faham" }).click();
+    try {
+      await page
+        .getByRole("button", { name: "Faham" })
+        .waitFor({ state: "visible", timeout: 8000 });
+      await page.getByRole("button", { name: "Faham" }).click();
+    } catch {
+      // banner notification did not appear, continue
+    }
     await page
       .locator("#fileInput_single")
       .setInputFiles("./test-data/image (19).png");
@@ -189,14 +273,31 @@ test("test", async ({ page }, testInfo) => {
       .first()
       .waitFor({ state: "visible", timeout: 20000 });
     await page.getByRole("textbox", { name: "dd/MM/yyyy" }).first().click();
+    const _cur = getCurrentDate();
+    const [_dd, _mm] = _cur.split("/");
+    const _mNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    const _mName = _mNames[parseInt(_mm, 10) - 1];
     await page
-      .getByRole("textbox", { name: "dd/MM/yyyy" })
+      .getByLabel("Month")
       .first()
-      .fill(getCurrentDate());
+      .selectOption(String(parseInt(_mm, 10) - 1));
     await page
-      .getByRole("textbox", { name: "dd/MM/yyyy" })
-      .first()
-      .press("Enter");
+      .locator(".flatpickr-calendar.open")
+      .getByLabel(`${_mName} ${parseInt(_dd, 10)},`)
+      .click();
     await page.getByText("Tempat Surat Cara Ditandatangan*").click();
 
     await page.getByRole("radio", { name: "Luar Malaysia" }).check();
@@ -214,80 +315,560 @@ test("test", async ({ page }, testInfo) => {
     await page
       .getByRole("checkbox", { name: "Saya / Syarikat sebagai" })
       .check();
+    await page.waitForTimeout(4000);
 
-    const randomAddrA0 =
-      addresses[Math.floor(Math.random() * addresses.length)];
+    // Detect which party type was auto-selected
+    const formAIsIndividu = await page
+      .getByRole("radio", { name: "Individu" })
+      .isChecked();
+    const formAIsSyarikat = await page
+      .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
+      .isChecked();
 
+    if (formAIsIndividu) {
+      const fillInd = async (sel: string, val: string) => {
+        const v = await page
+          .locator(sel)
+          .inputValue()
+          .catch(() => "");
+        if (!v.trim()) await page.locator(sel).fill(val);
+      };
+      await fillInd(
+        'input[name="StampingForm.FormAIndividualList[0].TelNo"]',
+        "0199184986",
+      );
+      const emailInd = await page
+        .locator("#fld-email-ind-0Step1")
+        .inputValue()
+        .catch(() => "");
+      if (!emailInd.trim())
+        await page.locator("#fld-email-ind-0Step1").fill("syed@gmail.com");
+      const addr1Ind = await page
+        .locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]')
+        .inputValue()
+        .catch(() => "");
+      if (!addr1Ind.trim()) {
+        const randomAddrA0 =
+          addresses[Math.floor(Math.random() * addresses.length)];
+        await page
+          .locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]')
+          .fill(randomAddrA0.Addr1);
+        await page
+          .locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]')
+          .fill(randomAddrA0.Addr2);
+        await page
+          .locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]')
+          .fill(randomAddrA0.Addr3);
+      }
+      await fillInd(
+        'input[name="StampingForm.FormAIndividualList[0].Postcode"]',
+        "15350",
+      );
+      /* // Tambah Individu ke Pihak Pertama
+      await page
+        .getByRole("button", { name: "+ Tambah Pihak Pertama" })
+        .click();
+      await page.getByRole("textbox").first().click();
+      await page.getByRole("textbox").first().fill("MUHAMAD ALIF ANUAR");
+      await page.getByRole("combobox").first().selectOption("1");
+      await page.locator("#ICNo_2").click();
+      await page.locator("#ICNo_2").fill("800403075628");
+      await page.getByRole("textbox").nth(3).click();
+      await page.getByRole("textbox").nth(3).fill("01245874857");
+      await page.locator("#fld-email-ind-2Step1").click();
+      await page.locator("#fld-email-ind-2Step1").fill("alif@gmail.com");
+      await page.getByRole("textbox").nth(5).click();
+      await page.getByRole("textbox").nth(5).fill("ABC ALAMAT 1");
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(2) > .form-control",
+        )
+        .click();
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(2) > .form-control",
+        )
+        .fill("DEF ALAMAT 2");
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(3) > .form-control",
+        )
+        .click();
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(3) > .form-control",
+        )
+        .fill("GHI ALAMAT 3");
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(13) > .form-control",
+        )
+        .first()
+        .click();
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(13) > .form-control",
+        )
+        .first()
+        .fill("80000");
+      // Tambah Syarikat ke Pihak Pertama
+      await page
+        .getByRole("button", { name: "+ Tambah Pihak Pertama" })
+        .click();
+      await page
+        .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
+        .last()
+        .check();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].CompanyName"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].CompanyName"]')
+        .fill("SYARIKAT ABCDEF");
+      await page
+        .locator('select[name="StampingForm.FormACompanyList[0].CatTaxId"]')
+        .selectOption("4");
+      await page
+        .locator(
+          'input[name="StampingForm.FormACompanyList[0].NewCompanyRegistrationNo"]',
+        )
+        .click();
+      await page
+        .locator(
+          'input[name="StampingForm.FormACompanyList[0].NewCompanyRegistrationNo"]',
+        )
+        .fill("199301012242");
+      await page.getByRole("radio").nth(5).check();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].TelNo"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].TelNo"]')
+        .fill("0333333333");
+      await page.locator("#fld-email-com-3Step1").click();
+      await page.locator("#fld-email-com-3Step1").fill("syarikat@gmail.com");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].ADDR1"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].ADDR1"]')
+        .fill("ALAMAT 1 ABC");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].ADDR2"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].ADDR2"]')
+        .fill("DEF ALAMAT 2");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].ADDR3"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].ADDR3"]')
+        .fill("HJI ALAMAT 3");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].Postcode"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[0].Postcode"]')
+        .fill("60000"); */
+    } else if (formAIsSyarikat) {
+      const fillCom = async (sel: string, val: string) => {
+        const v = await page
+          .locator(sel)
+          .inputValue()
+          .catch(() => "");
+        if (!v.trim()) await page.locator(sel).fill(val);
+      };
+      await page.locator("#KategoriPembayarDuti").selectOption("4");
+      await page
+        .locator(
+          'input[name="StampingForm.FormACompanyList[0].NewCompanyRegistrationNo"]',
+        )
+        .fill("200401032872");
+      await page.waitForTimeout(3000);
+      await fillCom(
+        'input[name="StampingForm.FormACompanyList[0].TelNo"]',
+        "0199184986",
+      );
+      const emailCom = await page
+        .locator("#fld-email-com-0Step1")
+        .inputValue()
+        .catch(() => "");
+      if (!emailCom.trim())
+        await page.locator("#fld-email-com-0Step1").fill("syed@gmail.com");
+      const addr1Com = await page
+        .locator('input[name="StampingForm.FormACompanyList[0].ADDR1"]')
+        .inputValue()
+        .catch(() => "");
+      if (!addr1Com.trim()) {
+        await page
+          .locator('input[name="StampingForm.FormACompanyList[0].ADDR1"]')
+          .fill("Unit 14-05, Level 14");
+        await page
+          .locator('input[name="StampingForm.FormACompanyList[0].ADDR2"]')
+          .fill("Menara TH Uptown");
+        await page
+          .locator('input[name="StampingForm.FormACompanyList[0].ADDR3"]')
+          .fill("No. 3, Jalan SS 21/39");
+      }
+      await fillCom(
+        'input[name="StampingForm.FormACompanyList[0].Postcode"]',
+        "47400",
+      );
+      // IsCompRole — always select Tidak for Syarikat
+      try {
+        await page
+          .locator("#step2_div_IsCompRole")
+          .waitFor({ state: "visible", timeout: 3000 });
+        await page.locator("#step2_div_IsCompRole input[value='0']").click();
+        await page.waitForTimeout(500);
+      } catch (_) {}
+      /* // Tambah Individu ke Pihak Pertama
+      await page
+        .getByRole("button", { name: "+ Tambah Pihak Pertama" })
+        .click();
+      await page.getByRole("textbox").first().click();
+      await page.getByRole("textbox").first().fill("MUHAMAD ALIF ANUAR");
+      await page.getByRole("combobox").first().selectOption("1");
+      await page.locator("#ICNo_2").click();
+      await page.locator("#ICNo_2").fill("800403075628");
+      await page.getByRole("textbox").nth(3).click();
+      await page.getByRole("textbox").nth(3).fill("01245874857");
+      await page.locator("#fld-email-ind-2Step1").click();
+      await page.locator("#fld-email-ind-2Step1").fill("alif@gmail.com");
+      await page.getByRole("textbox").nth(5).click();
+      await page.getByRole("textbox").nth(5).fill("ABC ALAMAT 1");
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(2) > .form-control",
+        )
+        .click();
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(2) > .form-control",
+        )
+        .fill("DEF ALAMAT 2");
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(3) > .form-control",
+        )
+        .click();
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(12) > .row > div:nth-child(3) > .form-control",
+        )
+        .fill("GHI ALAMAT 3");
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(13) > .form-control",
+        )
+        .first()
+        .click();
+      await page
+        .locator(
+          ".collapse-body.collapse.mt-3.show > div > div:nth-child(4) > div > div:nth-child(13) > .form-control",
+        )
+        .first()
+        .fill("80000");
+      // Tambah Syarikat ke Pihak Pertama (2nd syarikat, listIdx 1)
+      await page
+        .getByRole("button", { name: "+ Tambah Pihak Pertama" })
+        .click();
+      await page
+        .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
+        .last()
+        .check();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].CompanyName"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].CompanyName"]')
+        .fill("SYARIKAT ABCDEF");
+      await page
+        .locator('select[name="StampingForm.FormACompanyList[1].CatTaxId"]')
+        .selectOption("4");
+      await page
+        .locator(
+          'input[name="StampingForm.FormACompanyList[1].NewCompanyRegistrationNo"]',
+        )
+        .click();
+      await page
+        .locator(
+          'input[name="StampingForm.FormACompanyList[1].NewCompanyRegistrationNo"]',
+        )
+        .fill("199301012242");
+      await page.getByRole("radio").nth(5).check();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].TelNo"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].TelNo"]')
+        .fill("0333333333");
+      await page.locator("#fld-email-com-3Step1").click();
+      await page.locator("#fld-email-com-3Step1").fill("syarikat@gmail.com");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].ADDR1"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].ADDR1"]')
+        .fill("ALAMAT 1 ABC");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].ADDR2"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].ADDR2"]')
+        .fill("DEF ALAMAT 2");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].ADDR3"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].ADDR3"]')
+        .fill("HJI ALAMAT 3");
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].Postcode"]')
+        .click();
+      await page
+        .locator('input[name="StampingForm.FormACompanyList[1].Postcode"]')
+        .fill("60000"); */
+    }
+
+    // Tambah Kerajaan 1 ke Pihak Pertama
+    await page.getByRole("button", { name: "+ Tambah Pihak Pertama" }).click();
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]')
+      .getByRole("radio", { name: "Kerajaan / Badan Berkanun /" })
+      .last()
+      .check();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[0].GovName"]')
       .click();
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].TelNo"]')
-      .fill("0199184986");
-    await page.locator("#fld-email-ind-0Step1").click();
-    await page.locator("#fld-email-ind-0Step1").fill("syed@gmail.com");
+      .locator('input[name="StampingForm.FormAGovList[0].GovName"]')
+      .fill("Lembaga Air Perak");
+    await page.getByRole("radio").nth(5).check();
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]')
+      .locator('input[name="StampingForm.FormAGovList[0].GovTel"]')
       .click();
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Addr1"]')
-      .fill(randomAddrA0.Addr1);
+      .locator('input[name="StampingForm.FormAGovList[0].GovTel"]')
+      .fill("0144548711");
+    await page.locator("#fld-email-gov-2Step1").click();
+    await page.locator("#fld-email-gov-2Step1").fill("airperak@gmail.com");
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]')
+      .locator('input[name="StampingForm.FormAGovList[0].GovAdd1"]')
       .click();
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Addr2"]')
-      .fill(randomAddrA0.Addr2);
+      .locator('input[name="StampingForm.FormAGovList[0].GovAdd1"]')
+      .fill("Alamat 1");
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]')
+      .locator('input[name="StampingForm.FormAGovList[0].GovAdd2"]')
       .click();
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Addr3"]')
-      .fill(randomAddrA0.Addr3);
+      .locator('input[name="StampingForm.FormAGovList[0].GovAdd2"]')
+      .fill("Alamat 2");
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]')
+      .locator('input[name="StampingForm.FormAGovList[0].GovAdd3"]')
       .click();
     await page
-      .locator('input[name="StampingForm.FormAIndividualList[0].Postcode"]')
-      .fill("15350");
+      .locator('input[name="StampingForm.FormAGovList[0].GovAdd3"]')
+      .fill("Alamat 3");
+    await page
+      .locator('input[name="StampingForm.FormAGovList[0].GovPoscode"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[0].GovPoscode"]')
+      .fill("30000");
+    // Tambah Kerajaan 2 ke Pihak Pertama
+    await page.getByRole("button", { name: "+ Tambah Pihak Pertama" }).click();
+    await page
+      .getByRole("radio", { name: "Kerajaan / Badan Berkanun /" })
+      .last()
+      .check();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovName"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovName"]')
+      .fill("Lembaga Air Sibu");
+    await page.getByRole("radio").nth(5).check();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovTel"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovTel"]')
+      .fill("0122352654");
+    await page.locator("#fld-email-gov-3Step1").click();
+    await page.locator("#fld-email-gov-3Step1").fill("airsibu@gmail.com");
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovAdd1"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovAdd1"]')
+      .fill("Alamat 4");
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovAdd2"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovAdd2"]')
+      .fill("Alamat 5");
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovAdd3"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovAdd3"]')
+      .fill("Alamat 6");
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovPoscode"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormAGovList[1].GovPoscode"]')
+      .fill("96000");
 
     await page.waitForTimeout(1000);
-
     await page.getByRole("button", { name: "Seterusnya " }).click();
 
     await page
       .getByRole("radio", { name: "Kerajaan / Badan Berkanun /" })
       .check();
+    await page.locator("#step2_div_GovName").getByRole("textbox").click();
     await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovName"]')
+      .locator("#step2_div_GovName")
+      .getByRole("textbox")
       .fill("Lembaga Ahli Geologi Malaysia");
     await page.getByRole("listitem").click();
-    await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
-      .click();
-    await page
-      .locator('input[name="StampingForm.FormBGovList[0].GovTel"]')
-      .fill("0199184444");
+    await page.getByRole("radio", { name: "Pemilikan Asing" }).check();
+    await page.getByRole("radio", { name: "Pemilikan Tempatan" }).check();
+    await page.getByRole("textbox").nth(3).click();
+    await page.getByRole("textbox").nth(3).fill("0199184444");
     await page.locator("#govEmail_1").click();
     await page.locator("#govEmail_1").fill("lem@gmail.com");
     await page.locator("#govAdd1_1").click();
     await page.locator("#govAdd1_1").fill("232");
-    await page.locator("#govAdd1_1").press("Tab");
+    await page.locator("#govAdd2_1").click();
+    await page.locator("#govAdd1_1").fill("232");
+    await page.locator("#govAdd2_1").click();
     await page.locator("#govAdd2_1").fill("Lembaga");
-    await page.locator("#govAdd2_1").press("Tab");
+    await page.locator("#govAdd3_1").click();
     await page.locator("#govAdd3_1").fill("Geo");
-    await page
-      .getByLabel("B. PIHAK KEDUA")
-      .getByText(
-        "Nama Seperti Dalam Surat Cara* Nombor Pendaftaran Pertubuhan / Persatuan",
-      )
-      .click();
     await page.locator("#govPoscode_1").click();
     await page.locator("#govPoscode_1").fill("15500");
     await page.waitForTimeout(3000);
+
+    /* // Tambah Individu ke Pihak Kedua
+    await page.getByRole("button", { name: "+ Tambah Pihak Kedua" }).click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Name"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Name"]')
+      .fill("MUHAMAD SALEH");
+    await page.locator("#IsCitizen_4").selectOption("1");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].IcNo"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].IcNo"]')
+      .fill("590511025908");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].TelNo"]')
+      .fill("01545455555");
+    await page.locator("#fld-email-ind-4-Step2").click();
+    await page.locator("#fld-email-ind-4-Step2").fill("saleh@gmail.com");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr1"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr1"]')
+      .fill("ALAMAT 1");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr2"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr2"]')
+      .fill("ALAMAT 2");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr3"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Addr3"]')
+      .fill("ALAMAT 3");
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Postcode"]')
+      .click();
+    await page
+      .locator('input[name="StampingForm.FormBIndividualList[0].Postcode"]')
+      .fill("45000");
+    // Tambah Syarikat ke Pihak Kedua
+    await page.getByRole("button", { name: "+ Tambah Pihak Kedua" }).click();
+    await page
+      .getByRole("radio", { name: "Syarikat / Perniagaan Milikan" })
+      .last()
+      .check();
+    await page.getByRole("textbox").first().click();
+    await page.getByRole("textbox").first().fill("SYARIKAT ABAH AND SONS");
+    await page.getByRole("combobox").first().selectOption("4");
+    await page.getByRole("textbox").nth(1).click();
+    await page.getByRole("textbox").nth(1).fill("199301012242");
+    await page.getByRole("textbox").nth(2).click();
+    await page.getByRole("textbox").nth(2).fill("199301012242");
+    await page.locator("#compStatus1_5").check();
+    await page.getByRole("textbox").nth(4).click();
+    await page.getByRole("textbox").nth(4).fill("04444444444");
+    await page.getByRole("textbox").nth(5).click();
+    await page.getByRole("textbox").nth(5).fill("syarikatabahsons@gmail.com");
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(12) > div:nth-child(3) > div > .form-control",
+      )
+      .first()
+      .click();
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(12) > div:nth-child(3) > div > .form-control",
+      )
+      .first()
+      .fill("ALAMAT 3");
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(12) > div:nth-child(3) > div:nth-child(2) > .form-control",
+      )
+      .click();
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(12) > div:nth-child(3) > div:nth-child(2) > .form-control",
+      )
+      .fill("ALAMAT 4");
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(12) > div:nth-child(3) > div:nth-child(3) > .form-control",
+      )
+      .click();
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(12) > div:nth-child(3) > div:nth-child(3) > .form-control",
+      )
+      .fill("ALAMAT 5");
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(13) > .form-control",
+      )
+      .click();
+    await page
+      .locator(
+        ".collapse-body.collapse.mt-3.show > div > div:nth-child(5) > div > div:nth-child(13) > .form-control",
+      )
+      .fill("40000");
+
+    // If "Pentadbir Tanah / Pegawai Mahkamah..." radio appears on Pihak Kedua, select Ya
+    try {
+      await page
+        .locator("#step2_div_IsCompRole")
+        .waitFor({ state: "visible", timeout: 3000 });
+      await page.locator("#step2_div_IsCompRole input[value='1']").click();
+      await page.waitForTimeout(500);
+    } catch (_) {} */
 
     await page.getByRole("button", { name: "Seterusnya " }).click();
 
@@ -314,7 +895,7 @@ test("test", async ({ page }, testInfo) => {
 
     const openCal = page.locator(".flatpickr-calendar.open");
 
-    await page.locator("#section1 input[placeholder='dd/MM/yyyy']").click();
+    await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
     await page.waitForTimeout(3000);
     await openCal.waitFor({ state: "visible", timeout: 20000 });
     await openCal
@@ -390,6 +971,15 @@ test("test", async ({ page }, testInfo) => {
       .locator("label")
       .filter({ hasText: "Saya seperti nama dan Nombor" })
       .click();
+
+    // Check "Saya sebagai" radio — select Diri Sendiri only if none already selected
+    const sayaSebagaiChecked = await page
+      .locator('input[name="StampingForm.stampingData.FrmAck.Rep"]')
+      .evaluateAll((inputs: any[]) => inputs.some((el: any) => el.checked));
+    if (!sayaSebagaiChecked) {
+      await page.locator("#wakilDiri").check();
+    }
+
     await page
       .getByRole("radio", { name: "Pihak Pertama", exact: true })
       .check();
@@ -398,18 +988,35 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("button", { name: "Hantar " }).click();
     await page.getByRole("button", { name: "Ya, Hantar" }).click();
 
+    // Wait for success modal "Berjaya - Permohonan berjaya dihantar." then click OK
+    await page
+      .locator("#ds-popup-message")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.locator("button.ds-popup-btn-confirm").click();
+
+    await page.waitForTimeout(2000);
+
     await page
       .getByRole("button", { name: "Kembali ke Paparan Utama" })
       .waitFor({ state: "visible", timeout: 20000 });
 
     await page.waitForTimeout(2000);
-    await page
-      .getByText("Cetak Slip Pengesahan")
-      .waitFor({ state: "visible", timeout: 20000 });
-
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByText("Cetak Slip Pengesahan").click();
-    const download = await downloadPromise;
+    const cetakBtn = page.locator("button.btn-std", { hasText: "Cetak Slip Pengesahan" });
+    await cetakBtn.waitFor({ state: "visible", timeout: 20000 });
+    await cetakBtn.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    let download = null;
+    for (let _attempt = 0; _attempt < 3; _attempt++) {
+      try {
+        const dlPromise = page.waitForEvent("download", { timeout: 10000 });
+        await cetakBtn.click({ force: true });
+        download = await dlPromise;
+        break;
+      } catch {
+        await page.waitForTimeout(1000);
+      }
+    }
+    if (!download) throw new Error("Cetak Slip Pengesahan failed after 3 attempts");
 
     // Extract SRN from filename: Slip_Pengesahan_9992619817932717.pdf
     const filename = download.suggestedFilename();
