@@ -532,6 +532,10 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("button", { name: "Hantar " }).click();
     await page.getByRole("button", { name: "Batal" }).click();
     await page.getByRole("button", { name: "Hantar " }).click();
+    await page
+      .locator("#bndsPreviewLabel")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.locator("#bndsPreviewHantar").click();
     await page.getByRole("button", { name: "Ya, Hantar" }).click();
 
     // Wait for success modal "Berjaya - Permohonan berjaya dihantar." then click OK

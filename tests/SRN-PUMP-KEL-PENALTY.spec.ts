@@ -276,12 +276,27 @@ test("test", async ({ page }, testInfo) => {
     await page.waitForTimeout(1000);
     const [_dd, _mm] = dateToUse.split("/");
     const _mNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     const _mName = _mNames[parseInt(_mm, 10) - 1];
-    await page.locator(".flatpickr-calendar.open").waitFor({ state: "visible", timeout: 10000 });
-    await page.getByLabel("Month").first().selectOption(String(parseInt(_mm, 10) - 1));
+    await page
+      .locator(".flatpickr-calendar.open")
+      .waitFor({ state: "visible", timeout: 10000 });
+    await page
+      .getByLabel("Month")
+      .first()
+      .selectOption(String(parseInt(_mm, 10) - 1));
     await page.waitForTimeout(500);
     await page
       .locator(".flatpickr-calendar.open")
@@ -963,6 +978,10 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("button", { name: "Hantar " }).click();
     await page.getByRole("button", { name: "Batal" }).click();
     await page.getByRole("button", { name: "Hantar " }).click();
+    await page
+      .locator("#bndsPreviewLabel")
+      .waitFor({ state: "visible", timeout: 20000 });
+    await page.locator("#bndsPreviewHantar").click();
     await page.getByRole("button", { name: "Ya, Hantar" }).click();
 
     // Wait for success modal "Berjaya - Permohonan berjaya dihantar." then click OK
@@ -978,7 +997,9 @@ test("test", async ({ page }, testInfo) => {
 
     // Wait for the PDF download button and extract SRN from downloaded filename
     await page.waitForTimeout(3000);
-    const cetakBtn = page.locator("button.btn-std", { hasText: "Cetak Slip Pengesahan" });
+    const cetakBtn = page.locator("button.btn-std", {
+      hasText: "Cetak Slip Pengesahan",
+    });
     await cetakBtn.waitFor({ state: "visible", timeout: 20000 });
     await cetakBtn.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
@@ -993,7 +1014,8 @@ test("test", async ({ page }, testInfo) => {
         await page.waitForTimeout(1000);
       }
     }
-    if (!download) throw new Error("Cetak Slip Pengesahan failed after 3 attempts");
+    if (!download)
+      throw new Error("Cetak Slip Pengesahan failed after 3 attempts");
 
     // Extract SRN from filename: Slip_Pengesahan_9992619817932717.pdf
     const filename = download.suggestedFilename();
