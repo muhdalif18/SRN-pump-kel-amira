@@ -181,6 +181,7 @@ test("test", async ({ page }, testInfo) => {
       `--- Loop iteration ${i} of XX --- [${flowLabel}] date=${dateToUse}`,
     );
 
+    console.log("[" + i + "] → EDS: Upload dokumen...");
     await page.goto("https://eds-uat.hasil.gov.my/stamping/upload");
     //await page.locator('a[href="/stamping/upload"]').click();
     await page.waitForTimeout(5000);
@@ -426,6 +427,7 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("radio", { name: "Tiada" }).check(); */
     await page.getByRole("button", { name: "Seterusnya " }).click();
 
+    console.log("[" + i + "] → EDS: Upload dokumen sokongan...");
     // Upload document - intercept file chooser to handle native dialog
     await page
       .locator(
@@ -461,6 +463,7 @@ test("test", async ({ page }, testInfo) => {
       .filter({ hasText: "Saya seperti nama dan Nombor" })
       .click();
 
+    console.log("[" + i + "] → EDS: Pengesahan & hantar...");
     // Check "Saya sebagai" radio — select Diri Sendiri only if none already selected
     const sayaSebagaiChecked = await page
       .locator('input[name="StampingForm.stampingData.FrmAck.Rep"]')
@@ -527,6 +530,7 @@ test("test", async ({ page }, testInfo) => {
 
     await page.getByRole("cell", { name: "LHDNM Proses" }).first().click();
 
+    console.log("[" + i + "] → HITS: Login PR officer...");
     //HITS SIDE
     await page.goto("https://hitspre2.hasil.gov.my/Dashboard/Login");
     await page.waitForTimeout(3000);

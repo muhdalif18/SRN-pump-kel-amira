@@ -189,8 +189,18 @@ test("test", async ({ page }, testInfo) => {
     page = allPages[0];
 
     // ── Navigate to MyTax dashboard and change peranan ───────────────────────
+    console.log("[" + i + "] → Tukar peranan...");
     await page.goto("https://mytax-dev.hasil.gov.my/web/dashboard-content");
     await page.waitForTimeout(3000);
+
+    // Dismiss "Pemberitahuan MyTax" notification popup if it appears
+    try {
+      await page
+        .getByRole("button", { name: "Ok" })
+        .waitFor({ state: "visible", timeout: 5000 });
+      await page.getByRole("button", { name: "Ok" }).click();
+      await page.waitForTimeout(1000);
+    } catch { /* popup did not appear, continue */ }
 
     const pilihBtn = page.locator(".ic-container").first();
     await pilihBtn.waitFor({ state: "visible", timeout: 20000 });
@@ -237,6 +247,7 @@ test("test", async ({ page }, testInfo) => {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    console.log("[" + i + "] → EDS: Upload dokumen...");
     await page.goto("https://eds-uat.hasil.gov.my/stamping/upload");
     await page.waitForTimeout(5000);
     try {
@@ -880,6 +891,7 @@ test("test", async ({ page }, testInfo) => {
 
     await page.getByRole("button", { name: "Seterusnya " }).click();
 
+    console.log("[" + i + "] → EDS: Upload dokumen sokongan...");
     // Upload supporting document
     await page
       .locator(
@@ -908,6 +920,7 @@ test("test", async ({ page }, testInfo) => {
       .filter({ hasText: "Saya seperti nama dan Nombor" })
       .click();
 
+    console.log("[" + i + "] → EDS: Pengesahan & hantar...");
     // Check "Saya sebagai" radio — select Diri Sendiri only if none already selected
     const sayaSebagaiChecked = await page
       .locator('input[name="StampingForm.stampingData.FrmAck.Rep"]')
@@ -977,6 +990,7 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("heading", { name: "Senarai Permohonan" }).click();
     await page.getByRole("cell", { name: "LHDNM Proses" }).first().click();
 
+    console.log("[" + i + "] → HITS: Login PR officer...");
     //HITS SIDE
     await page.goto("https://hitspre2.hasil.gov.my/Dashboard/Login");
     await page.waitForTimeout(3000);
@@ -1053,6 +1067,7 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("link", { name: " Log Keluar" }).click();
     await page.waitForTimeout(5000);
 
+    console.log("[" + i + "] → HITS: Login pemegang SRN (" + user.loginId + ")...");
     // Login as SRN holder
     await page
       .locator("#Input_UsernameVal")
@@ -1227,6 +1242,7 @@ test("test", async ({ page }, testInfo) => {
     await page.getByRole("link", { name: " Log Keluar" }).click();
     await page.waitForTimeout(5000);
 
+    console.log("[" + i + "] → HITS: Indorsmen...");
     // Login as endorsement user
     await page
       .locator("#Input_UsernameVal")
