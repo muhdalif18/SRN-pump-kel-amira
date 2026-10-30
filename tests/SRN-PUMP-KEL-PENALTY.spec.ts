@@ -283,8 +283,11 @@ test("test", async ({ page }, testInfo) => {
       .getByRole("textbox", { name: "dd/MM/yyyy" })
       .first()
       .waitFor({ state: "visible", timeout: 20000 });
-    await page.getByRole("textbox", { name: "dd/MM/yyyy" }).first().click();
-    await page.waitForTimeout(1000);
+    for (let _calTry = 0; _calTry < 5; _calTry++) {
+      await page.getByRole("textbox", { name: "dd/MM/yyyy" }).first().click();
+      await page.waitForTimeout(1000);
+      if (await page.locator(".flatpickr-calendar.open").isVisible()) break;
+    }
     const [_dd, _mm] = dateToUse.split("/");
     const _mNames = [
       "January",
@@ -889,8 +892,11 @@ test("test", async ({ page }, testInfo) => {
     const openCal = page.locator(".flatpickr-calendar.open");
 
     // Open calendar and pick the first enabled day in the currently shown month
-    await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
-    await page.waitForTimeout(3000);
+    for (let _calTry = 0; _calTry < 5; _calTry++) {
+      await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
+      await page.waitForTimeout(1000);
+      if (await openCal.isVisible()) break;
+    }
     await openCal.waitFor({ state: "visible", timeout: 20000 });
     await openCal
       .locator(

@@ -7,7 +7,7 @@ import * as fs from "fs";
 test.use({
   browserName: "chromium",
   channel: "chrome",
-  headless: true,
+  headless: false,
 });
 
 const namaList = ["Form of Transfer of Securites"];
@@ -31,9 +31,9 @@ const PERANANS: Array<{
   {
     label: "JANGAN PERGIIIIIIIII)",
     clickSequence: [
-      { text: "Firma Pengurusan", exact: true },
-      { text: "Firma Ejen Duti Setem", exact: true },
-      { text: "HHL RESOURCES SENDIRIAN BERHAD - ISKANDAR PUTERI", exact: true },
+      { text: "Individu", exact: true },
+      //  { text: "Firma Ejen Duti Setem", exact: true },
+      //  { text: "HHL RESOURCES SENDIRIAN BERHAD - ISKANDAR PUTERI", exact: true },
     ],
   },
 ];
@@ -285,8 +285,11 @@ test("test", async ({ page }, testInfo) => {
       .getByRole("textbox", { name: "dd/MM/yyyy" })
       .first()
       .waitFor({ state: "visible", timeout: 20000 });
-    await page.getByRole("textbox", { name: "dd/MM/yyyy" }).first().click();
-    await page.waitForTimeout(1000);
+    for (let _calTry = 0; _calTry < 5; _calTry++) {
+      await page.getByRole("textbox", { name: "dd/MM/yyyy" }).first().click();
+      await page.waitForTimeout(1000);
+      if (await page.locator(".flatpickr-calendar.open").isVisible()) break;
+    }
     const [_dd, _mm] = dateToUse.split("/");
     const _mNames = [
       "January",
@@ -825,8 +828,11 @@ test("test", async ({ page }, testInfo) => {
     const openCal = page.locator(".flatpickr-calendar.open");
 
     // Open calendar and pick the first enabled day in the currently shown month
-    await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
-    await page.waitForTimeout(3000);
+    for (let _calTry = 0; _calTry < 5; _calTry++) {
+      await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
+      await page.waitForTimeout(1000);
+      if (await openCal.isVisible()) break;
+    }
     await openCal.waitFor({ state: "visible", timeout: 20000 });
     await openCal
       .locator(

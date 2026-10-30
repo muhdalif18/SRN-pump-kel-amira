@@ -506,8 +506,11 @@ test("test", async ({ page }, testInfo) => {
       await page.waitForTimeout(1500);
 
       const openCal = page.locator(".flatpickr-calendar.open");
-      await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
-      await page.waitForTimeout(3000);
+      for (let _calTry = 0; _calTry < 5; _calTry++) {
+        await page.getByRole("textbox", { name: "dd/mm/yyyy" }).first().click();
+        await page.waitForTimeout(1000);
+        if (await openCal.isVisible()) break;
+      }
       await openCal.waitFor({ state: "visible", timeout: 20000 });
       await openCal
         .locator(
