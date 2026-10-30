@@ -653,10 +653,15 @@ test("test", async ({ page }, testInfo) => {
     // Tambah Pihak Pertama 1 via Pilih Kegemaran
     await page.getByRole("button", { name: "+ Tambah Pihak Pertama" }).click();
     await page.waitForTimeout(500);
-    await page.locator("button.btnLoadFavoriteSingle").last().click();
+    const favBtn2 = page.locator("button.btnLoadFavoriteSingle[data-section-id='2']");
+    await favBtn2.evaluate(el => el.scrollIntoView({ block: "center" }));
+    await page.waitForTimeout(500);
+    await favBtn2.click();
     await page
       .locator(".fav-pilih-dropdown")
       .waitFor({ state: "visible", timeout: 10000 });
+    await page.locator(".fav-pilih-dropdown span").first().evaluate(el => el.scrollIntoView({ block: "center" }));
+    await page.waitForTimeout(300);
     await page.locator(".fav-pilih-dropdown span").first().click();
     await page
       .locator("button.ds-popup-btn-confirm")
